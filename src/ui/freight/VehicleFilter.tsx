@@ -1,8 +1,10 @@
 'use client'
 import {Checkbox} from "@/components/ui/checkbox";
 import {Separator} from "@/components/ui/separator";
-import {useState} from "react";
 import {CardTitle} from "@/components/ui/card";
+import * as React from "react";
+import {State} from "@/lib/action";
+import { useState } from "react";
 
 const vehicleData = [
     {type: "curtainsider", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},
@@ -43,7 +45,16 @@ const vehicleData = [
 const vehicleCategories = ["any_size", "bus", "lorry", "double_trailer", "solo"];
 type VehicleCategory = (typeof vehicleCategories)[number];
 
-export default function VehicleFilter() {
+export type VehicleFilterProps = {
+    className?: string;
+    state: State;
+};
+
+export const VehicleFilter = ({
+                                  className,
+                                  state,
+                                  ...props
+                              }: VehicleFilterProps) => {
     const [selectedCategories, setSelectedCategories] = useState<VehicleCategory[]>([]);
     const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
 
@@ -75,55 +86,74 @@ export default function VehicleFilter() {
     };
 
     return (
-        <div className="flex gap-6 p-4">
-            <div className="w-1/7">
-                <CardTitle>Rozmiar pojazdu</CardTitle>
-
-                {vehicleCategories.map((category) => (
-                    <div key={category} className="flex items-center gap-2 mt-2">
-                        <Checkbox
-                            checked={selectedCategories.includes(category)}
-                            onCheckedChange={() => handleCategoryChange(category)}
-                            id={category}
-                        />
-                        <label htmlFor={category}>{category}</label>
-                    </div>
-                ))}
-            </div>
-
-            <Separator orientation="vertical" className="h-full"/>
-
-            <div className="w-6/7">
-                <CardTitle>Typ pojazdu</CardTitle>
-                <div className=" grid grid-cols-5 ">
-                    {vehicleData.map((vehicle) => {
-                        const isValid = selectedCategories.length === 0 || selectedCategories.some((c) => vehicle[c as keyof typeof vehicle]);
-                        const isChecked = selectedVehicles.includes(vehicle.type);
-
-                        if (!isValid && isChecked) {
-                            setSelectedVehicles((prev) => prev.filter((v) => v !== vehicle.type));
-                        }
-
-                        return (
-                            <div className="flex items-center gap-2 mt-2" key={vehicle.type}>
-                                <Checkbox
-                                    checked={isChecked}
-                                    onCheckedChange={() => handleVehicleChange(vehicle.type)}
-                                    disabled={!isValid}
-                                    id={vehicle.type}
-                                />
-                                <label htmlFor={vehicle.type}
-                                       className={!isValid ? "text-gray-500" : ""}>{vehicle.type}</label>
-
-                            </div>
-                        );
-
-
-                    })}
-
+        <div>
+            <div className="flex gap-6 p-4">
+                <div className="w-1/7">
+                    <CardTitle>Rozmiar pojazdu</CardTitle>
+                    {vehicleCategories.map((category) => (
+                        <div key={category} className="flex items-center gap-2 mt-2">
+                            <Checkbox
+                                checked={selectedCategories.includes(category)}
+                                onClick={() => handleCategoryChange(category)}
+                                id={category}
+                                name="selectedCategories"
+                                value={category}
+                                defaultChecked={selectedCategories.includes(category)}
+                            />
+                            <label htmlFor={category}>{category}</label>
+                        </div>
+                    ))}
                 </div>
+                <Separator orientation="vertical" className="h-full"/>
+                <div className="w-6/7">
+                    <CardTitle>Typ pojazdu</CardTitle>
+                    <div className="grid grid-cols-5 lg:grid-cols-7 ">
+                        {vehicleData.map((vehicle) => {
+                            const isValid = selectedCategories.length === 0 || selectedCategories.some((c) => vehicle[c as keyof typeof vehicle]);
+                            const isChecked = selectedVehicles.includes(vehicle.type);
 
+                            return (
+                                <div className="flex items-center mt-2 gap-2" key={vehicle.type}>
+                                    <Checkbox
+                                        checked={isChecked}
+                                        onClick={() => handleVehicleChange(vehicle.type)}
+                                        disabled={!isValid}
+                                        name="selectedVehicles"
+                                        id={vehicle.type}
+                                        value={vehicle.type}
+                                        defaultChecked={selectedVehicles.includes(vehicle.type)}
+                                    />
+                                    <label htmlFor={vehicle.type} className={!isValid ? "text-gray-500" : ""}>
+                                        {vehicle.type}
+                                    </label>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+            <div className="flex gap-6 p-4">
+                <div className="w-1/7">
+                    <div aria-live="polite" aria-atomic="true">
+                        {state?.errors?.selectedCategories &&
+                            state.errors?.selectedCategories.map((error: string) => (
+                                <p className="mt-2 text-xs text-red-500" key={error}>
+                                    {error}
+                                </p>
+                            ))}
+                    </div>
+                </div>
+                <div className="w-6/7">
+                    <div aria-live="polite" aria-atomic="true">
+                        {state?.errors?.selectedVehicles &&
+                            state.errors?.selectedVehicles.map((error: string) => (
+                                <p className="mt-2 text-xs text-red-500" key={error}>
+                                    {error}
+                                </p>
+                            ))}
+                    </div>
+                </div>
             </div>
         </div>
     );
-}
+};

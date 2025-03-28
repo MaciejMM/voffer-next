@@ -4,9 +4,9 @@ import {State} from "@/lib/action";
 
 export const LoadingAttributes = ({state}: { state: State }) => {
     const attributes = [
-        {name: 'weight', label: 'Waga (tony)'},
-        {name: 'length', label: 'Długość (metr)'},
-        {name: 'volume', label: 'Wolumen'},
+        {name: 'weight', label: 'Waga (tony)', errorKey: "Weight",min: 0},
+        {name: 'length', label: 'Długość (metr)', errorKey: "Length", min: 0},
+        {name: 'volume', label: 'Wolumen', errorKey: "Volume", min: 0},
     ]
 
     return (
@@ -16,8 +16,15 @@ export const LoadingAttributes = ({state}: { state: State }) => {
                     attributes.map((attribute) => (
                         <div className="grid w-full max-w-sm items-center gap-1.5" key={attribute.name}>
                             <Label htmlFor={attribute.name}>{attribute.label}</Label>
-                            <Input defaultValue={state.inputs?.[attribute.name]} name={attribute.name} type="number" id={attribute.name} placeholder={attribute.label}
-                                   aria-describedby={`${attribute.name}-error`}/>
+                            <Input
+                                aria-invalid={!!state.errors?.[attribute.name as keyof State['errors']]}
+                                defaultValue={state.inputs?.[attribute.name as keyof State['inputs']]}
+                                name={attribute.name}
+                                type="number"
+                                min={attribute.min}
+                                id={attribute.name}
+                                placeholder={attribute.label}
+                                aria-describedby={`${attribute.name}-error`}/>
                         </div>
                     ))
                 }

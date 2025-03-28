@@ -3,6 +3,13 @@ import {useState} from "react";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import * as React from "react";
 import {cn} from "@/lib/utils";
+import {State} from "@/lib/action";
+
+
+interface TimeSelectProps extends React.HTMLAttributes<HTMLDivElement> {
+    state: State;
+    locationKey: string;
+}
 
 const generateTimeOptions = (startHour = 0, startMinute = 0) => {
     const times = [];
@@ -18,7 +25,9 @@ const generateTimeOptions = (startHour = 0, startMinute = 0) => {
 
 const TimeSelect = ({
                         className,
-                    }: React.HTMLAttributes<HTMLDivElement>) => {
+                        state,
+                        ...props
+                    }: TimeSelectProps) => {
     const [selectedStartTime, setSelectedStartTime] = useState("");
     const [selectedEndTime, setSelectedEndTime] = useState("");
 
@@ -29,9 +38,10 @@ const TimeSelect = ({
     return (
         <div className={cn("grid grid-cols-2 gap-4", className)}>
 
-            <Select onValueChange={setSelectedStartTime}>
-                <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Start"/>
+            <Select onValueChange={setSelectedStartTime} name={`${props.locationKey}StartTime`}>
+                <SelectTrigger className="w-full"
+                               aria-invalid={!!state.errors?.[`${props.locationKey}StartTime` as keyof State['errors']]}>
+                    <SelectValue placeholder="Start" aria-invalid={true}/>
                 </SelectTrigger>
                 <SelectContent>
                     {startTimes.map((time) => (
@@ -42,13 +52,13 @@ const TimeSelect = ({
                 </SelectContent>
             </Select>
 
-            <Select onValueChange={setSelectedEndTime}>
-                <SelectTrigger className="w-full">
+            <Select onValueChange={setSelectedEndTime} name={`${props.locationKey}EndTime`}>
+                <SelectTrigger className="w-full" aria-invalid={!!state.errors?.[`${props.locationKey}EndTime` as keyof State['errors']]}>
                     <SelectValue placeholder="Koniec"/>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent >
                     {endTimes.map((time) => (
-                        <SelectItem key={time} value={time}>
+                        <SelectItem key={time} value={time} >
                             {time}
                         </SelectItem>
                     ))}

@@ -1,16 +1,23 @@
 import {Card, CardContent} from "@/components/ui/card";
-import VehicleFilter from "@/ui/freight/VehicleFilter";
 import {cn} from "@/lib/utils";
 import * as React from "react";
+import {State} from "@/lib/action";
+import { VehicleFilter } from "./VehicleFilter";
+interface VehicleSelectorProps extends React.HTMLAttributes<HTMLDivElement> {
+    state: State;
+}
+
 
 export const VehicleSelector = ({
                                     className,
-                                }: React.HTMLAttributes<HTMLDivElement>)=>{
+                                    state,
+                                    ...props
+                                }: VehicleSelectorProps)=>{
 
     return (
         <Card className={cn("", className)}>
             <CardContent className="flex flex-col gap-4">
-                <VehicleFilter></VehicleFilter>
+                <VehicleFilter state={state}></VehicleFilter>
             </CardContent>
         </Card>
     )

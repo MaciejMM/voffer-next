@@ -74,11 +74,11 @@ export const CountrySelect = ({
 
 
     return (
-            <Select name={`${props.locationKey}Country`}  >
-                <SelectTrigger className={cn("", className)}>
-                    <SelectValue placeholder="Kraj"/>
+            <Select name={`${props.locationKey}Country`} >
+                <SelectTrigger className={cn("", className)} aria-invalid={!!state.errors?.[`${props.locationKey}Country`]}>
+                    <SelectValue placeholder="Kraj" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent >
                     <SelectGroup>
                         <SelectLabel  >Wybierz Kraj</SelectLabel>
                         {
@@ -87,7 +87,7 @@ export const CountrySelect = ({
                                 code: string
                             }) => a.code.localeCompare(b.code))
                                 .map((country) => (
-                                    <SelectItem  className="" key={country.code} value={country.code}>{country.name}</SelectItem>
+                                    <SelectItem className="" key={country.code} value={country.code}>{country.name}</SelectItem>
                                 ))
                         }
 

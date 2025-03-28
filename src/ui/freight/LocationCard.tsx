@@ -10,7 +10,6 @@ import {State} from "@/lib/action";
 export enum Key {
     Loading = 'loading',
     Unloading = 'unloading',
-
 }
 
 
@@ -20,15 +19,41 @@ interface LocationCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 
-export const LocationCard =({
-    className,
+export const LocationCard = ({
+                                 className,
                                  state,
                                  ...props
                              }: LocationCardProps) => {
 
     const title = props.locationKey === Key.Loading ? "Miejsce załadunku" : "Miejsce rozładunku";
 
+    const postalCodeKey = `${props.locationKey}PostalCode` as keyof State['errors'];
+    const place = `${props.locationKey}Place` as keyof State['errors'];
+    const country = `${props.locationKey}Country` as keyof State['errors'];
 
+
+    const errorList = [
+        {
+            key: postalCodeKey as keyof State['errors'],
+            id: `${props.locationKey}PostalCode-error`
+        },
+        {
+            key: place as keyof State['errors'],
+            id: `${props.locationKey}Place-error`
+        },
+        {
+            key: country as keyof State['errors'],
+            id: `${props.locationKey}Country-error`
+        },
+        {
+            key: `${props.locationKey}StartTime` as keyof State['errors'],
+            id: `${props.locationKey}StartTime-error`
+        },
+        {
+            key: `${props.locationKey}EndTime` as keyof State['errors'],
+            id: `${props.locationKey}EndTime-error`
+        }
+    ]
 
     return (
         <Card className="w-full">
@@ -38,14 +63,44 @@ export const LocationCard =({
             <CardContent className="flex flex-col gap-4">
                 <div className="grid grid-cols-9 grid-rows-2 gap-4">
                     <div className="col-span-9 grid gap-4 grid-cols-12 row-span-1">
-                        <CountrySelect state={state}  locationKey={props.locationKey} className="w-full col-span-3"/>
-                        <Input name={`${props.locationKey}PostalCode`} className="col-span-3" placeholder="Kod pocztowy"/>
-                        <Input name={`${props.locationKey}Place`} className="col-span-6" placeholder={title}/>
+                        <CountrySelect
+                                       defaultValue={state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']]}
+                                       state={state}
+                                       locationKey={props.locationKey}
+                                       className="w-full col-span-3"/>
+                        <Input aria-invalid={!!state.errors?.[postalCodeKey]}
+                               defaultValue={state.inputs?.[postalCodeKey]}
+                               name={`${props.locationKey}PostalCode`}
+                               className="col-span-3"
+                               placeholder="Kod pocztowy"
+                               aria-describedby={`${props.locationKey}PostalCode`}/>
+                        <Input aria-invalid={!!state.errors?.[place]}
+                               defaultValue={state.inputs?.[place]}
+                               name={`${props.locationKey}Place`}
+                               className="col-span-6"
+                               placeholder={title}
+
+                               aria-describedby={`${props.locationKey}Place`}/>
                     </div>
                     <div className="col-span-9 grid gap-4 grid-cols-12 row-span-1">
                         <DateRangePicker className="col-span-6 w-full"/>
-                        <TimeSelect className="col-span-6"/>
+                        <TimeSelect locationKey={props.locationKey} state={state} className="col-span-6"/>
                     </div>
+                </div>
+                <div>
+                    {
+                        errorList.map(({key, id}) => (
+                            <div id={id} aria-live="polite" aria-atomic="true" key={key}>
+                                {state?.errors?.[key as keyof State['errors']] &&
+                                    state.errors?.[key as keyof State['errors']].map((error: string) => (
+                                        <p className="mt-2 text-xs text-red-500" key={error}>
+                                            {error}
+                                        </p>
+                                    ))}
+                            </div>
+                        ))
+                    }
+
                 </div>
             </CardContent>
         </Card>
