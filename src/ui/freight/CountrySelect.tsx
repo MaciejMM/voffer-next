@@ -75,7 +75,7 @@ export const CountrySelect = ({
 
     return (
             <Select name={`${props.locationKey}Country`} >
-                <SelectTrigger className={cn("", className)} aria-invalid={!!state.errors?.[`${props.locationKey}Country`]}>
+                <SelectTrigger className={cn("", className)} aria-invalid={!!state.errors?.[`${props.locationKey}Country` as keyof State['errors']]}>
                     <SelectValue placeholder="Kraj" />
                 </SelectTrigger>
                 <SelectContent >
