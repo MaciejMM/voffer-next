@@ -55,6 +55,7 @@ export const LocationCard = ({
         }
     ]
 
+    // @ts-ignore
     return (
         <Card className="w-full">
             <CardHeader>
@@ -88,18 +89,16 @@ export const LocationCard = ({
                     </div>
                 </div>
                 <div>
-                    {
-                        errorList.map(({key, id}) => (
-                            <div id={id} aria-live="polite" aria-atomic="true" key={key}>
-                                {state?.errors?.[key as keyof State['errors']] &&
-                                    state.errors?.[key as keyof State['errors']].map((error: string) => (
-                                        <p className="mt-2 text-xs text-red-500" key={error}>
-                                            {error}
-                                        </p>
-                                    ))}
-                            </div>
-                        ))
-                    }
+                    {errorList.map(({ key, id }) => (
+                        <div id={id} aria-live="polite" aria-atomic="true" key={id}>
+                            {/*// @ts-ignore*/}
+                            {state?.errors?.[key]?.map((error: string) => (
+                                <p className="mt-2 text-xs text-red-500" key={error}>
+                                    {error}
+                                </p>
+                            ))}
+                        </div>
+                    ))}
 
                 </div>
             </CardContent>
