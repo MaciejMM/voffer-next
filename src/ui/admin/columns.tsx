@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import {User} from "@/ui/admin/UserTable";
+import {User} from "@/lib/admin-action";
 
 export const columns: ColumnDef<User>[] = [
     {

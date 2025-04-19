@@ -1,5 +1,16 @@
 import {getKindeServerSession} from "@kinde-oss/kinde-auth-nextjs/server";
-import {User} from "@/ui/admin/UserTable";
+
+export type User ={
+    id: number;
+    kindeId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    createdAt: string;
+    updatedAt: string;
+    title: string;
+    username: string;
+}
 
 
 export async function fetchUsers():Promise<User[]> {
