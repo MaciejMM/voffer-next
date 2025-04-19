@@ -6,7 +6,9 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbSeparator, Breadc
 export default function DynamicBreadcrumb() {
     const pathname = usePathname();
 
-    const pathSegments = pathname.split("/").filter(segment => segment !== "");
+    const pathSegments = pathname.split("/").filter(segment => segment !== "" && !Number(segment));
+
+
 
     return (
         <Breadcrumb>

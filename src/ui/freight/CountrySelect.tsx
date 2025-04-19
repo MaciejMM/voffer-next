@@ -1,3 +1,4 @@
+'use client'
 import {
     Select,
     SelectContent,
@@ -21,8 +22,14 @@ export const CountrySelect = ({
                                   state,
                                   ...props
                               }: CountrySelectProps) => {
+    const [selectedValue, setSelectedValue] = React.useState(state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']] ?? "");
+
+    React.useEffect(() => {
+        setSelectedValue(state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']] ?? "");
+    }, [state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']]]);
 
     const countries = [
+        {name: "Afghanistan", code: "AF"},
         {name: "Austria", code: "AT"},
         {name: "Belgium", code: "BE"},
         {name: "France", code: "FR"},
@@ -71,30 +78,41 @@ export const CountrySelect = ({
         {name: "Russian Federation", code: "RU"},
     ];
 
-
+    const key = `${props.locationKey}Country`;
 
     return (
-            <Select name={`${props.locationKey}Country`} >
-                <SelectTrigger className={cn("", className)} aria-invalid={!!state.errors?.[`${props.locationKey}Country` as keyof State['errors']]}>
-                    <SelectValue placeholder="Kraj" />
-                </SelectTrigger>
-                <SelectContent >
-                    <SelectGroup>
-                        <SelectLabel  >Wybierz Kraj</SelectLabel>
-                        {
-                            countries.sort((a: { name: string, code: string }, b: {
-                                name: string,
-                                code: string
-                            }) => a.code.localeCompare(b.code))
-                                .map((country) => (
-                                    <SelectItem className="" key={country.code} value={country.code}>{country.name}</SelectItem>
-                                ))
-                        }
-
-                    </SelectGroup>
-                </SelectContent>
-            </Select>
-
+        <Select
+            value={selectedValue}
+            onValueChange={(value) => {
+                setSelectedValue(value);
+                const hiddenInput = document.querySelector(`input[name="${key}"]`) as HTMLInputElement;
+                if (hiddenInput) hiddenInput.value = value;
+                if (state.inputs) {
+                    (state.inputs as any)[`${props.locationKey}Country`] = value;
+                }
+            }}
+            name={key}
+        >
+            <SelectTrigger className={cn("", className)} aria-invalid={!!state.errors?.[`${props.locationKey}Country` as keyof State['errors']]}>
+                <SelectValue placeholder="Kraj" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectGroup>
+                    <SelectLabel>Wybierz Kraj</SelectLabel>
+                    {
+                        countries.sort((a: { name: string, code: string }, b: {
+                            name: string,
+                            code: string
+                        }) => a.code.localeCompare(b.code))
+                            .map((country) => (
+                                <SelectItem className=""
+                                            key={country.code}
+                                            value={country.code}>{country.name}</SelectItem>
+                            ))
+                    }
+                </SelectGroup>
+            </SelectContent>
+            <input type="hidden" name={key} value={selectedValue} />
+        </Select>
     )
-
 }

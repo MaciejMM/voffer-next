@@ -13,10 +13,17 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import {State} from "@/lib/action";
 
+interface DateRangePickerProps extends React.HTMLAttributes<HTMLDivElement> {
+    state: State;
+    locationKey: string;
+}
 export const DateRangePicker = ({
                                     className,
-                                }: React.HTMLAttributes<HTMLDivElement>) => {
+                                    state,
+                                    ...props
+                                }: DateRangePickerProps) => {
 
     const [date, setDate] = React.useState<DateRange | undefined>({
         from: new Date(),
@@ -26,12 +33,17 @@ export const DateRangePicker = ({
 
     const handleSelect = (newDate: DateRange | undefined) => {
         setDate(newDate);
+
         if (newDate?.from && newDate?.to) {
             setOpen(false);
         }
     };
     return (
-        <div className={cn("w-full", className)}>
+        <div className={cn("w-full", className)} >
+            <input type="hidden" name={`${props.locationKey}Date`} value={`${date?.from?.toISOString()}-${date?.to?.toISOString()}`} />
+            <input type="hidden" name={`${props.locationKey}StartDate`} value={`${date?.from?.toISOString()}`} />
+            <input type="hidden" name={`${props.locationKey}EndDate`} value={`${date?.to?.toISOString()}`} />
+
             <Popover >
                 <PopoverTrigger asChild>
                     <Button
@@ -41,6 +53,8 @@ export const DateRangePicker = ({
                             "w-full justify-start text-left font-normal",
                             !date && "text-muted-foreground"
                         )}
+                        value={`${date?.from}-${date?.to}`}
+                        name={`${props.locationKey}Date}`}
                     >
                         <CalendarIcon/>
                         {date?.from ? (

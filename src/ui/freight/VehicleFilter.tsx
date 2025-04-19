@@ -4,7 +4,7 @@ import {Separator} from "@/components/ui/separator";
 import {CardTitle} from "@/components/ui/card";
 import * as React from "react";
 import {State} from "@/lib/action";
-import { useState } from "react";
+import {useState} from "react";
 
 const vehicleData = [
     {type: "curtainsider", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},
@@ -132,28 +132,32 @@ export const VehicleFilter = ({
                     </div>
                 </div>
             </div>
-            <div className="flex gap-6 p-4">
-                <div className="w-1/7">
-                    <div aria-live="polite" aria-atomic="true">
-                        {state?.errors?.selectedCategories &&
-                            state.errors?.selectedCategories.map((error: string) => (
-                                <p className="mt-2 text-xs text-red-500" key={error}>
-                                    {error}
-                                </p>
-                            ))}
+            {state?.errors?.selectedCategories || state?.errors?.selectedVehicles ?
+                <div className="flex gap-6 p-4">
+                    <div className="w-1/7">
+                        <div aria-live="polite" aria-atomic="true">
+                            {state?.errors?.selectedCategories &&
+                                state.errors?.selectedCategories.map((error: string) => (
+                                    <p className="mt-2 text-xs text-red-500" key={error}>
+                                        {error}
+                                    </p>
+                                ))}
+                        </div>
+                    </div>
+                    <Separator orientation="vertical" className="h-full"/>
+                    <div className="w-6/7">
+                        <div aria-live="polite" aria-atomic="true">
+                            {state?.errors?.selectedVehicles &&
+                                state.errors?.selectedVehicles.map((error: string) => (
+                                    <p className="mt-2 text-xs text-red-500" key={error}>
+                                        {error}
+                                    </p>
+                                ))}
+                        </div>
                     </div>
                 </div>
-                <div className="w-6/7">
-                    <div aria-live="polite" aria-atomic="true">
-                        {state?.errors?.selectedVehicles &&
-                            state.errors?.selectedVehicles.map((error: string) => (
-                                <p className="mt-2 text-xs text-red-500" key={error}>
-                                    {error}
-                                </p>
-                            ))}
-                    </div>
-                </div>
-            </div>
+                : <></>
+            }
         </div>
     );
 };

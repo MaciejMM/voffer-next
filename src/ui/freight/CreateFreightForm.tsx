@@ -28,7 +28,7 @@ export default function Form() {
                 <VehicleSelector state={state} className="w-full col-span-2"/>
                 <Card className="col-span-1">
                     <CardContent className="flex flex-col gap-4 flex-1">
-                        <TruckLoadRadioSelector className="pb-4"/>
+                        <TruckLoadRadioSelector className="pb-4" state={state}/>
                         <LoadingAttributes state={state}/>
                         <Textarea aria-invalid={!!state.errors?.description} state={state} name="description" placeholder="Dodaj komentarz" className=""/>
                         <ExchangeSelector/>
