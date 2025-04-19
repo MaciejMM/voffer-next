@@ -2,6 +2,8 @@ import {create} from 'zustand';
 type AuthStatus = "loading" | "logged-in" | "logged-out";
 
 interface StoreState {
+    loadingCountryCode: string;
+    setLoadingCountryCode: (loadingCountryCode: string) => void;
     unloadingCountryCode: string;
     setUnloadingCountryCode: (unloadingCountryCode: string) => void;
     openSearchDialog: boolean;
@@ -22,6 +24,8 @@ interface StoreState {
 }
 
 const useStore = create<StoreState>((set) => ({
+    loadingCountryCode: "",
+    setLoadingCountryCode: (code) => set({loadingCountryCode: code}),
     unloadingCountryCode: "",
     setUnloadingCountryCode: (code) => set({unloadingCountryCode: code}),
     openSearchDialog: false,
@@ -39,6 +43,7 @@ const useStore = create<StoreState>((set) => ({
     setSelectedUnloadingLocation: (location) => set({selectedUnloadingLocation: location}),
     status: "loading",
     setStatus: (status) => set({ status }),
+
 
 }));
 
