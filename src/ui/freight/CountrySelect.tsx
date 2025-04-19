@@ -23,10 +23,11 @@ export const CountrySelect = ({
                                   ...props
                               }: CountrySelectProps) => {
     const [selectedValue, setSelectedValue] = React.useState(state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']] ?? "");
+    let countryInput = state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']];
 
     React.useEffect(() => {
         setSelectedValue(state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']] ?? "");
-    }, [state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']]]);
+    }, [countryInput, props.locationKey, state.inputs]);
 
     const countries = [
         {name: "Afghanistan", code: "AF"},
@@ -93,8 +94,9 @@ export const CountrySelect = ({
             }}
             name={key}
         >
-            <SelectTrigger className={cn("", className)} aria-invalid={!!state.errors?.[`${props.locationKey}Country` as keyof State['errors']]}>
-                <SelectValue placeholder="Kraj" />
+            <SelectTrigger className={cn("", className)}
+                           aria-invalid={!!state.errors?.[`${props.locationKey}Country` as keyof State['errors']]}>
+                <SelectValue placeholder="Kraj"/>
             </SelectTrigger>
             <SelectContent>
                 <SelectGroup>
@@ -112,7 +114,7 @@ export const CountrySelect = ({
                     }
                 </SelectGroup>
             </SelectContent>
-            <input type="hidden" name={key} value={selectedValue} />
+            <input type="hidden" name={key} value={selectedValue}/>
         </Select>
     )
 }

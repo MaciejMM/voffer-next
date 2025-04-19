@@ -29,7 +29,7 @@ export default function TranseuStatusIndicator() {
         };
 
         checkToken();
-    }, []);
+    }, [setStatus]);
 
     useEffect(() => {
         const handleStorageChange = () => {
@@ -45,7 +45,7 @@ export default function TranseuStatusIndicator() {
         return () => {
             window.removeEventListener("storage", handleStorageChange);
         };
-    }, []);
+    }, [setStatus]);
 
     if (status === "loading") {
         return <div className="flex items-center gap-2">

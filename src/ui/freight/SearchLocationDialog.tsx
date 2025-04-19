@@ -40,7 +40,7 @@ export type SearchResult = {
     city: string;
     countryCode: string;
     displayName: string;
-    name:string;
+    name: string;
 }
 export const SearchLocationDialog = ({
                                          className,
@@ -54,13 +54,6 @@ export const SearchLocationDialog = ({
     const [isLoading, setIsLoading] = useState(false);
     const [input, setInput] = useState<string>("");
     const {loadingCountryCode, unloadingCountryCode} = useStore();
-
-
-    useEffect(() => {
-        if (input.length > 0) {
-            search(input);
-        }
-    }, [input]);
 
     const search = useDebouncedCallback((input: string) => {
         if (!input || input.length < 2) return;
@@ -85,6 +78,12 @@ export const SearchLocationDialog = ({
         fetchData();
     }, 300);
 
+    useEffect(() => {
+        if (input.length > 0) {
+            search(input);
+        }
+    }, [input, search]);
+
     const closeAndClear = () => {
         setInput("");
         setData([]);
@@ -96,7 +95,7 @@ export const SearchLocationDialog = ({
             state.inputs!.loadingPostalCode = item.postalCode;
             state.inputs!.loadingPlace = item.city;
             state.inputs!.loadingCountry = item.countryCode.toUpperCase();
-        }else {
+        } else {
             state.inputs!.unloadingPostalCode = item.postalCode;
             state.inputs!.unloadingPlace = item.city;
             state.inputs!.unloadingCountry = item.countryCode.toUpperCase();

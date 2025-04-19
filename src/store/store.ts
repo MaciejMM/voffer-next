@@ -20,7 +20,6 @@ interface StoreState {
     setSelectedUnloadingPostalCode: (selectedUnloadingPostalCode: string) => void;
     status: AuthStatus;
     setStatus: (status: AuthStatus) => void;
-
 }
 
 const useStore = create<StoreState>((set) => ({
@@ -43,7 +42,6 @@ const useStore = create<StoreState>((set) => ({
     setSelectedUnloadingLocation: (location) => set({selectedUnloadingLocation: location}),
     status: "loading",
     setStatus: (status) => set({ status }),
-
 
 }));
 
