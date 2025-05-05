@@ -145,7 +145,7 @@ export async function updateUser(id: string, formData: FormData) {
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
     const title = formData.get('title') as string;
-    const role = formData.get('role') as Role;
+    const role = formData.get('role') as string;
     const active = formData.get('active') === 'true';
 
     try {

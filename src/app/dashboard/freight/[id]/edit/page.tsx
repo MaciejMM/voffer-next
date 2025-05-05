@@ -91,8 +91,14 @@ const mapFreight: any = (freight: FreightResponse) => {
     }
 }
 
-export default async function Page({params}: { params: { id: string } }) {
-    const freight:Freight = await getFreight(params.id);
+export default async function Page({
+    params,
+}: {
+    params: { id: string };
+    searchParams: { [key: string]: string | string[] | undefined };
+}) {
+    const queryParams = await params;
+    const freight: Freight = await getFreight(queryParams.id);
 
     return (
         <div className="flex flex-col gap-8">
