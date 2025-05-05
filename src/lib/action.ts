@@ -62,8 +62,12 @@ const FormSchema = z.object({
         invalid_type_error: 'Wprowadź datę rozpoczęcia załadunku',
     }).min(1, {message: 'Wprowadź datę rozpoczęcia załadunku'}),
     loadingEndDate: z.string({
+        required_error: 'Wprowadź datę zakończenia załadunku',
         invalid_type_error: 'Wprowadź datę zakończenia załadunku',
-    }).min(1, {message: 'Wprowadź datę zakończenia załadunku'}),
+    }).min(1, 'Wprowadź datę zakończenia załadunku')
+        .refine((val) => val !== 'undefined', {
+            message: 'Wprowadź datę zakończenia załadunku',
+        }),
     unloadingCountry: z.string({
         invalid_type_error: 'Wprowadź kraj rozładunku',
     }).min(1, {message: 'Wprowadź kraj rozładunku'}),
@@ -86,9 +90,13 @@ const FormSchema = z.object({
         invalid_type_error: 'Wprowadź datę rozpoczęcia rozładunku',
     }).min(1, {message: 'Wprowadź datę rozpoczęcia rozładunku'}),
     unloadingEndDate: z.string({
+        required_error: 'Wprowadź datę zakończenia rozładunku',
         invalid_type_error: 'Wprowadź datę zakończenia rozładunku',
-    }).min(1, {message: 'Wprowadź datę zakończenia rozładunku'}),
-
+    }).min(1, 'Wprowadź datę zakończenia rozładunku')
+    .min(1, 'Wprowadź datę zakończenia rozładunku')
+        .refine((val) => val !== 'undefined', {
+            message: 'Wprowadź datę zakończenia rozładunku',
+        }),
     description: z.string({
         invalid_type_error: 'Wprowadź opis',
     }).min(1, {message: 'Wprowadź opis'}),
@@ -155,9 +163,9 @@ export async function createFreight(prevState: State, formData: FormData): Promi
         unloadingPlace: formData.get('unloadingPlace') as string,
         unloadingStartTime: formData.get('unloadingStartTime') as string,
         unloadingEndTime: formData.get('unloadingEndTime') as string,
-        unloadingDate: formData.get('unloadingDate') as string,
+        unloadingDate: (formData.get('unloadingDate')?.toString() ?? '') as string,
         unloadingStartDate: formData.get('unloadingStartDate') as string,
-        unloadingEndDate: formData.get('unloadingEndDate') as string,
+        unloadingEndDate: formData.get('unloadingEndDate')  as string,
         description: formData.get('description') as string,
         selectedCategories: formData.getAll('selectedCategories') as string[],
         selectedVehicles: formData.getAll('selectedVehicles') as string[],
@@ -178,7 +186,6 @@ export async function createFreight(prevState: State, formData: FormData): Promi
     }
 
     const validatedData = CreateFreight.safeParse(rawFormData);
-
     if (!validatedData.success) {
         return {
             errors: validatedData.error.flatten().fieldErrors,
@@ -190,7 +197,7 @@ export async function createFreight(prevState: State, formData: FormData): Promi
         };
     }
 
-    const { getAccessTokenRaw } = getKindeServerSession();
+    const {getAccessTokenRaw} = getKindeServerSession();
     const kindeAccessToken = await getAccessTokenRaw();
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/v1/freight`,
@@ -242,5 +249,92 @@ export async function getFreights() {
     }
 
     return await res.json();
+}
+
+export async function updateFreight(prevState: State, formData: FormData): Promise<State> {
+    const rawFormData = {
+        id: formData.get('id') as string,
+        weight: formData.get('weight') as string,
+        length: formData.get('length') as string,
+        volume: formData.get('volume') as string,
+        loadingCountry: formData.get('loadingCountry') as string,
+        loadingPostalCode: formData.get('loadingPostalCode') as string,
+        loadingPlace: formData.get('loadingPlace') as string,
+        loadingStartTime: formData.get('loadingStartTime') as string,
+        loadingEndTime: formData.get('loadingEndTime') as string,
+        loadingDate: formData.get('loadingDate') as string,
+        loadingStartDate: formData.get('loadingStartDate') as string,
+        loadingEndDate: formData.get('loadingEndDate') as string,
+        unloadingCountry: formData.get('unloadingCountry') as string,
+        unloadingPostalCode: formData.get('unloadingPostalCode') as string,
+        unloadingPlace: formData.get('unloadingPlace') as string,
+        unloadingStartTime: formData.get('unloadingStartTime') as string,
+        unloadingEndTime: formData.get('unloadingEndTime') as string,
+        unloadingDate: formData.get('unloadingDate') as string,
+        unloadingStartDate: formData.get('unloadingStartDate') as string,
+        unloadingEndDate: formData.get('unloadingEndDate') as string,
+        description: formData.get('description') as string,
+        selectedCategories: formData.getAll('selectedCategories') as string[],
+        selectedVehicles: formData.getAll('selectedVehicles') as string[],
+        isFullTruck: formData.get('isFullTruck') !== 'false',
+    };
+
+    // Get new access token
+    const tokenData = await refreshAccessTokenFromApi();
+    if (!tokenData) {
+        return {
+            success: false,
+            isError: true,
+            isSuccess: false,
+            errors: {},
+            message: 'Failed to refresh access token',
+            inputs: rawFormData,
+        };
+    }
+
+    const validatedData = CreateFreight.safeParse(rawFormData);
+    if (!validatedData.success) {
+        return {
+            errors: validatedData.error.flatten().fieldErrors,
+            isError: true,
+            isSuccess: false,
+            message: 'Uzupełnij wszystkie wymagane pola',
+            success: false,
+            inputs: rawFormData
+        };
+    }
+
+    const {getAccessTokenRaw} = getKindeServerSession();
+    const kindeAccessToken = await getAccessTokenRaw();
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/v1/freight/${rawFormData.id}`,
+        {
+            headers: {
+                "Authorization": `Bearer ${kindeAccessToken}`,
+                "Transeu-Access-Token": `Bearer ${tokenData.accessToken}`,
+                "Content-Type": "application/json",
+            },
+            method: 'PUT',
+            body: JSON.stringify(validatedData.data),
+        });
+
+    if (!res.ok) {
+        return {
+            isError: true,
+            isSuccess: false,
+            message: 'Wystąpił błąd podczas aktualizacji frachtu',
+            success: false,
+            inputs: rawFormData
+        };
+    }
+
+    return {
+        success: true,
+        isError: false,
+        isSuccess: true,
+        errors: {},
+        message: 'Freight updated successfully.',
+        inputs: rawFormData,
+    };
 }
 

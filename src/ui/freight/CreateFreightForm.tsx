@@ -17,7 +17,7 @@ export default function Form() {
     const initialState: State = {message: "", success: false, errors: {}, inputs: {}};
     const [state, action, isPending] = useActionState(createFreight, initialState);
 
-
+    
     return (
         <form action={action} className="flex flex-col gap-4 w-full">
             <div className="flex flex-row gap-4 ">

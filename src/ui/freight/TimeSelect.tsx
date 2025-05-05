@@ -28,8 +28,16 @@ const TimeSelect = ({
                         state,
                         ...props
                     }: TimeSelectProps) => {
-    const [selectedStartTime, setSelectedStartTime] = useState("");
-    const [selectedEndTime, setSelectedEndTime] = useState("");
+
+    let startTimeInput = state.inputs?.[`${props.locationKey}StartTime` as keyof State['inputs']];
+    let endTimeInput = state.inputs?.[`${props.locationKey}EndTime` as keyof State['inputs']];
+    const [selectedStartTime, setSelectedStartTime] = useState(startTimeInput ?? "");
+    const [selectedEndTime, setSelectedEndTime] = useState(endTimeInput ?? "");
+
+    React.useEffect(() => {
+        setSelectedStartTime(startTimeInput ?? "");
+        setSelectedEndTime(endTimeInput ?? "");
+    }, [startTimeInput, endTimeInput]);
 
     const startTimes = generateTimeOptions();
     const [startHour, startMinute] = selectedStartTime ? selectedStartTime.split(":").map(Number) : [0, 0];
@@ -38,7 +46,7 @@ const TimeSelect = ({
     return (
         <div className={cn("grid grid-cols-2 gap-4", className)}>
 
-            <Select onValueChange={setSelectedStartTime} name={`${props.locationKey}StartTime`}>
+            <Select onValueChange={setSelectedStartTime} name={`${props.locationKey}StartTime`} value={selectedStartTime}>
                 <SelectTrigger className="w-full"
                                aria-invalid={!!state.errors?.[`${props.locationKey}StartTime` as keyof State['errors']]}>
                     <SelectValue placeholder="Start" aria-invalid={true}/>
@@ -52,13 +60,14 @@ const TimeSelect = ({
                 </SelectContent>
             </Select>
 
-            <Select onValueChange={setSelectedEndTime} name={`${props.locationKey}EndTime`}>
-                <SelectTrigger className="w-full" aria-invalid={!!state.errors?.[`${props.locationKey}EndTime` as keyof State['errors']]}>
+            <Select onValueChange={setSelectedEndTime} name={`${props.locationKey}EndTime`} value={selectedEndTime}>
+                <SelectTrigger className="w-full"
+                               aria-invalid={!!state.errors?.[`${props.locationKey}EndTime` as keyof State['errors']]}>
                     <SelectValue placeholder="Koniec"/>
                 </SelectTrigger>
-                <SelectContent >
+                <SelectContent>
                     {endTimes.map((time) => (
-                        <SelectItem key={time} value={time} >
+                        <SelectItem key={time} value={time}>
                             {time}
                         </SelectItem>
                     ))}

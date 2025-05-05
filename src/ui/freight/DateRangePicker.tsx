@@ -25,12 +25,28 @@ export const DateRangePicker = ({
                                     ...props
                                 }: DateRangePickerProps) => {
 
+
     const [date, setDate] = React.useState<DateRange | undefined>({
         from: new Date(),
         to: addDays(new Date(), 0),
     })
-    const [open, setOpen] = React.useState(false);
 
+
+    let startDate = state.inputs?.[`${props.locationKey}StartDate` as keyof State['inputs']];
+    let endDate = state.inputs?.[`${props.locationKey}EndDate` as keyof State['inputs']];
+    React.useEffect(() => {
+        if (startDate && endDate) {
+            setDate({
+                from: new Date(startDate),
+                to: new Date(endDate),
+            });
+        } else {
+            setDate(undefined);
+        }
+    }, [startDate, endDate]);
+
+    const [open, setOpen] = React.useState(false);
+    
     const handleSelect = (newDate: DateRange | undefined) => {
         setDate(newDate);
 
@@ -38,11 +54,23 @@ export const DateRangePicker = ({
             setOpen(false);
         }
     };
+
+    const formatDate = (date: Date | undefined) => {
+        if (!date) return '';
+        try {
+            return date.toISOString();
+        } catch (error) {
+            console.error('Invalid date:', date);
+            return '';
+        }
+    };
+    
+
     return (
         <div className={cn("w-full", className)} >
-            <input type="hidden" name={`${props.locationKey}Date`} value={`${date?.from?.toISOString()}-${date?.to?.toISOString()}`} />
-            <input type="hidden" name={`${props.locationKey}StartDate`} value={`${date?.from?.toISOString()}`} />
-            <input type="hidden" name={`${props.locationKey}EndDate`} value={`${date?.to?.toISOString()}`} />
+            <input type="hidden" name={`${props.locationKey}Date`} value={`${formatDate(date?.from)}-${formatDate(date?.to)}`} />
+            <input type="hidden" name={`${props.locationKey}StartDate`} value={`${formatDate(date?.from)}`} />
+            <input type="hidden" name={`${props.locationKey}EndDate`} value={`${formatDate(date?.to)}`} />
 
             <Popover >
                 <PopoverTrigger asChild>

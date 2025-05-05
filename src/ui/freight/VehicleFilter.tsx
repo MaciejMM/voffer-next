@@ -55,8 +55,8 @@ export const VehicleFilter = ({
                                   state,
                                   ...props
                               }: VehicleFilterProps) => {
-    const [selectedCategories, setSelectedCategories] = useState<VehicleCategory[]>([]);
-    const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
+    const [selectedCategories, setSelectedCategories] = useState<VehicleCategory[]>(state.inputs?.selectedCategories ?? []);
+    const [selectedVehicles, setSelectedVehicles] = useState<string[]>(state.inputs?.selectedVehicles ?? []);
 
     const handleCategoryChange = (category: VehicleCategory) => {
         setSelectedCategories((prev) => {

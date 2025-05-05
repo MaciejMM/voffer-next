@@ -57,7 +57,12 @@ export const LocationCard = ({
         {
             key: `${props.locationKey}EndTime` as keyof State['errors'],
             id: `${props.locationKey}EndTime-error`
+        },
+        {
+            key: `${props.locationKey}EndDate` as keyof State['errors'],
+            id: `${props.locationKey}EndDate-error`
         }
+
     ]
 
     // @ts-ignore
@@ -85,13 +90,13 @@ export const LocationCard = ({
                                name={`${props.locationKey}Place`}
                                className="col-span-5"
                                placeholder={title}
-
                                aria-describedby={`${props.locationKey}Place`}/>
                       <Search size={24} onClick={() => setOpen(true)}></Search>
                     </div>
                     <div className="col-span-9 grid gap-4 grid-cols-12 row-span-1">
                         <DateRangePicker state={state} locationKey={props.locationKey}  className="col-span-6 w-full"/>
                         <TimeSelect locationKey={props.locationKey} state={state} className="col-span-6"/>
+
                     </div>
                 </div>
 

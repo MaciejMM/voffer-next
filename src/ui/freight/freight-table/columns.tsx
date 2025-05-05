@@ -9,7 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal } from "lucide-react"
+import {CheckCircle2, CheckIcon, MoreHorizontal, XCircle} from "lucide-react"
 import {Button} from "@/components/ui/button";
 
 type Freight = {
@@ -185,6 +185,23 @@ export const columns: ColumnDef<Freight>[] = [
             return (
                 <div className="flex flex-col">
                     <span className="text-sm text-gray-900">{isFullTruck ? "FTL" : "LTL"}</span>
+                </div>
+            );
+        },
+    },
+    {
+        accessorKey: "transeuFreightId",
+        header: "TRANS.EU",
+        cell: ({row}) => {
+            const {transeuFreightId} = row.original;
+
+            return (
+                <div className="flex flex-col justify-center">
+                    <span className="text-sm text-gray-900">{transeuFreightId !== null ?
+                        <CheckCircle2 className="text-green-500" size={16}/>
+                        : <XCircle className="text-red-500" size={16}/>
+
+                    }</span>
                 </div>
             );
         },
