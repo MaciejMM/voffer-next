@@ -93,12 +93,13 @@ const mapFreight: any = (freight: FreightResponse) => {
 
 export default async function Page({
     params,
+    searchParams,
 }: {
-    params: { id: string };
-    searchParams: { [key: string]: string | string[] | undefined };
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const queryParams = await params;
-    const freight: Freight = await getFreight(queryParams.id);
+    const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
+    const freight: Freight = await getFreight(resolvedParams.id);
 
     return (
         <div className="flex flex-col gap-8">

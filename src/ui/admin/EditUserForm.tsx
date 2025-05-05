@@ -41,7 +41,7 @@ export default function EditUserForm({ user }: FormProps) {
     );
 
     const handleSubmit = async (formData: FormData) => {
-        const result = await formAction(formData) as ActionResult;
+        const result = await formAction(formData) as unknown as ActionResult;
         
         if (result.success) {
             toast({
