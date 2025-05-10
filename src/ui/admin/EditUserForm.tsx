@@ -1,14 +1,15 @@
 'use client';
 
 import { useActionState } from 'react';
+import { updateUser, UpdateUserState } from '@/lib/actions/admin';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateUser } from "@/lib/actions/admin";
-import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type Role = 'ADMIN' | 'USER';
 
@@ -17,119 +18,131 @@ interface User {
     firstName: string;
     lastName: string;
     title: string;
-    role: Role;
-    active: boolean;
+    role?: Role;
+    active?: boolean;
 }
 
-interface FormProps {
-    user: User;
-}
-
-type ActionResult = {
-    success: boolean;
-    message?: string;
-};
-
-export default function EditUserForm({ user }: FormProps) {
+export default function EditUserForm({ user }: { user: User }) {
     const router = useRouter();
-    const { toast } = useToast();
-    const [state, formAction, isPending] = useActionState(
-        async (state: ActionResult, formData: FormData): Promise<ActionResult> => {
-            return await updateUser(user.id, formData);
-        },
-        { success: false }
-    );
-
-    const handleSubmit = async (formData: FormData) => {
-        const result = await formAction(formData) as unknown as ActionResult;
-        
-        if (result.success) {
-            toast({
-                title: "Success",
-                description: "User updated successfully",
-            });
-            router.push('/dashboard/admin');
-        } else {
-            toast({
-                title: "Error",
-                description: result.message || "Failed to update user",
-                variant: "destructive",
-            });
-        }
+    const initialState: UpdateUserState = {
+        errors: {},
+        message: '',
+        success: false,
     };
 
+    const [state, action, isPending] = useActionState(updateUser, initialState);
+    const [selectedTitle, setSelectedTitle] = useState(user.title);
+
+    useEffect(() => {
+        if (state.success) {
+            router.push('/dashboard/admin');
+        }
+    }, [state.success, router]);
+
     return (
-        <Card className="w-full max-w-2xl mx-auto">
-            <CardHeader>
-                <CardTitle>Edit User</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <form action={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-8">
+            <h3 className="text-2xl font-semibold tracking-tight">
+                Edit User
+            </h3>
+            <Card className="w-full max-w-2xl">
+                <CardHeader>
+                    <CardTitle>User Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form action={action} className="flex flex-col gap-4">
+                        <input type="hidden" name="id" value={user.id} />
+                        
+                        <div className="space-y-2">
+                            <Label>Title</Label>
+                            <div 
+                                className="flex gap-4" 
+                                role="radiogroup"
+                                aria-invalid={!!state.errors?.title}
+                                aria-describedby="title-error"
+                            >
+                                {['Mr', 'Mrs', 'Ms'].map((title) => (
+                                    <div key={title} className="flex items-center space-x-2">
+                                        <input
+                                            type="radio"
+                                            id={title}
+                                            name="title"
+                                            value={title}
+                                            className="h-4 w-4"
+                                            checked={selectedTitle === title}
+                                            onChange={(e) => setSelectedTitle(e.target.value)}
+                                        />
+                                        <Label htmlFor={title}>{title}</Label>
+                                    </div>
+                                ))}
+                            </div>
+                            {state.errors?.title && (
+                                <p className="text-sm text-red-500" id="title-error">
+                                    {state.errors.title[0]}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Role</Label>
+                            <input 
+                                type="hidden" 
+                                name="role" 
+                                value="USER" 
+                            />
+                            <div className="text-sm text-gray-500">
+                                Role: USER
+                            </div>
+                        </div>
+
                         <div className="space-y-2">
                             <Label htmlFor="firstName">First Name</Label>
                             <Input
                                 id="firstName"
                                 name="firstName"
+                                placeholder="John"
                                 defaultValue={user.firstName}
-                                required
+                                aria-invalid={!!state.errors?.firstName}
+                                aria-describedby="firstName-error"
                             />
+                            {state.errors?.firstName && (
+                                <p className="text-sm text-red-500" id="firstName-error">
+                                    {state.errors.firstName[0]}
+                                </p>
+                            )}
                         </div>
+
                         <div className="space-y-2">
                             <Label htmlFor="lastName">Last Name</Label>
                             <Input
                                 id="lastName"
                                 name="lastName"
+                                placeholder="Doe"
                                 defaultValue={user.lastName}
-                                required
+                                aria-invalid={!!state.errors?.lastName}
+                                aria-describedby="lastName-error"
                             />
+                            {state.errors?.lastName && (
+                                <p className="text-sm text-red-500" id="lastName-error">
+                                    {state.errors.lastName[0]}
+                                </p>
+                            )}
                         </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="title">Title</Label>
-                        <Input
-                            id="title"
-                            name="title"
-                            defaultValue={user.title}
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="role">Role</Label>
-                        <Select name="role" defaultValue={user.role}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="ADMIN">Admin</SelectItem>
-                                <SelectItem value="USER">User</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            id="active"
-                            name="active"
-                            defaultChecked={user.active}
-                            className="h-4 w-4 rounded border-gray-300"
-                        />
-                        <Label htmlFor="active">Active</Label>
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => router.back()}
-                        >
-                            Cancel
+
+                        {state.message && !state.success && (
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                    {state.message}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        <Button type="submit" disabled={isPending} className="mt-4">
+                            {isPending ? 'Updating...' : 'Update User'}
                         </Button>
-                        <Button type="submit" disabled={isPending}>
-                            {isPending ? "Saving..." : "Save Changes"}
-                        </Button>
-                    </div>
-                </form>
-            </CardContent>
-        </Card>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
     );
 } 
