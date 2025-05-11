@@ -209,7 +209,7 @@ export const columns: ColumnDef<Freight>[] = [
     {
         id: "actions",
         cell: ({ row }) => {
-
+ 
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -221,13 +221,13 @@ export const columns: ColumnDef<Freight>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Akcje</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(row.id)}
+                            onClick={() => navigator.clipboard.writeText(row.original.id.toString())}
                         >
                             Copy payment ID
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={()=>{
-                            window.location.href = `/dashboard/freight/${row.id}/edit`
+                            window.location.href = `/dashboard/freight/${row.original.id}/edit`
                         }}>Edytuj Fracht</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

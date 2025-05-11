@@ -22,14 +22,12 @@ async function getUserData(id: string) {
     return response.json();
 }
 
-export default async function EditUserPage({
-    params,
-}: {
-    params: { id: string };
-    searchParams: { [key: string]: string | string[] | undefined };
-}) {
+export default async function EditUserPage(props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
+    const id = params.id;
+
     try {
-        const user = await getUserData(params.id);
+        const user = await getUserData(id);
         return <EditUserForm user={user} />;
     } catch (error) {
         notFound();
