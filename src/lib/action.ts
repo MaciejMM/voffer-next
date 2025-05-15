@@ -193,7 +193,7 @@ export async function createFreight(prevState: State, formData: FormData): Promi
     };
 
     // Get new access token using our new API route
-    const tokenResponse = await fetch('/api/trans/auth', {
+    const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/trans/auth`, {
         method: 'PUT',
         credentials: 'include',
     });

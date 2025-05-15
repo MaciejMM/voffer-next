@@ -2,7 +2,7 @@
 
 export async function refreshTranseuAccessToken() {
     try {
-        const response = await fetch('/api/trans/auth', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/trans/auth`, {
             method: "PUT",
             credentials: "include",
         });
@@ -26,7 +26,7 @@ export async function refreshTranseuAccessToken() {
 
 export async function getTranseuAccessToken(code: string): Promise<string> {
     try {
-        const response = await fetch('/api/trans/auth', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/trans/auth`, {
             method: "POST",
             credentials: "include",
             headers: {
