@@ -2,7 +2,7 @@
 
 import {z} from 'zod';
 import {getKindeServerSession} from "@kinde-oss/kinde-auth-nextjs/server";
-import {refreshAccessTokenFromApi} from "@/lib/actions/auth";
+import { cookies } from 'next/headers';
 
 export interface FreightFormData {
     weight?: string;
@@ -144,6 +144,26 @@ export type State = {
     }
 };
 
+async function refreshAccessTokenFromApi() {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/trans/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh token');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    return null;
+  }
+}
 
 export async function createFreight(prevState: State, formData: FormData): Promise<State> {
     const rawFormData = {
@@ -161,7 +181,7 @@ export async function createFreight(prevState: State, formData: FormData): Promi
         unloadingCountry: formData.get('unloadingCountry') as string,
         unloadingPostalCode: formData.get('unloadingPostalCode') as string,
         unloadingPlace: formData.get('unloadingPlace') as string,
-        unloadingStartTime: formData.get('unloadingStartTime') as string,
+        unloadingStartTime: formData.get('unloadingTime') as string,
         unloadingEndTime: formData.get('unloadingEndTime') as string,
         unloadingDate: (formData.get('unloadingDate')?.toString() ?? '') as string,
         unloadingStartDate: formData.get('unloadingStartDate') as string,
@@ -172,15 +192,31 @@ export async function createFreight(prevState: State, formData: FormData): Promi
         isFullTruck: formData.get('isFullTruck') !== 'false',
     };
 
-    // Get new access token
-    const tokenData = await refreshAccessTokenFromApi();
-    if (!tokenData) {
+    // Get new access token using our new API route
+    const tokenResponse = await fetch('/api/trans/auth', {
+        method: 'PUT',
+        credentials: 'include',
+    });
+
+    if (!tokenResponse.ok) {
         return {
             success: false,
             isError: true,
             isSuccess: false,
             errors: {},
             message: 'Failed to refresh access token',
+            inputs: rawFormData,
+        };
+    }
+
+    const tokenData = await tokenResponse.json();
+    if (!tokenData.access_token) {
+        return {
+            success: false,
+            isError: true,
+            isSuccess: false,
+            errors: {},
+            message: 'Failed to get access token',
             inputs: rawFormData,
         };
     }
@@ -204,7 +240,7 @@ export async function createFreight(prevState: State, formData: FormData): Promi
         {
             headers: {
                 "Authorization": `Bearer ${kindeAccessToken}`,
-                "Transeu-Access-Token": `Bearer ${tokenData.accessToken}`,
+                "Transeu-Access-Token": `Bearer ${tokenData.access_token}`,
                 "Content-Type": "application/json",
             },
             method: 'POST',

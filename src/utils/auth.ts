@@ -1,8 +1,9 @@
 'use client';
+
 export async function refreshTranseuAccessToken() {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/v1/transeu/refresh-token`, {
-            method: "POST",
+        const response = await fetch('/api/trans/auth', {
+            method: "PUT",
             credentials: "include",
         });
 
@@ -23,10 +24,9 @@ export async function refreshTranseuAccessToken() {
     }
 }
 
-export async function getTranseuAccessToken(code:string): Promise<string> {
+export async function getTranseuAccessToken(code: string): Promise<string> {
     try {
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/v1/transeu/token`, {
+        const response = await fetch('/api/trans/auth', {
             method: "POST",
             credentials: "include",
             headers: {
@@ -34,16 +34,25 @@ export async function getTranseuAccessToken(code:string): Promise<string> {
             },
             body: JSON.stringify({
                 code: code,
+                redirect_uri: process.env.NEXT_PUBLIC_TRANS_REDIRECT_URI
             }),
         });
 
         if (!response.ok) {
-            console.log("Failed to refresh TRANS.EU token");
+            console.log("Failed to get TRANS.EU token");
+            throw new Error("Failed to get token");
         }
-        return await response.json();
+
+        const data = await response.json();
+        
+        if (data.access_token) {
+            sessionStorage.setItem("transeuAccessToken", data.access_token);
+        }
+
+        return data.access_token || "";
 
     } catch (err) {
-        console.error("Error refreshing access token", err);
+        console.error("Error getting access token", err);
         return "";
     }
 }

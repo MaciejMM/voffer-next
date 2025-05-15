@@ -15,10 +15,10 @@ export const TranseuLoginCard = () => {
 
         // Construct the authorization URL
         const authUrl = new URL('https://auth.platform.trans.eu/oauth2/auth');
-        authUrl.searchParams.append('client_id', process.env.NEXT_PUBLIC_TRANS_CLIENT_ID || '');
+        authUrl.searchParams.append('client_id', process.env.TRANS_CLIENT_ID || '');
         authUrl.searchParams.append('response_type', 'code');
         authUrl.searchParams.append('state', state);
-        authUrl.searchParams.append('redirect_uri', process.env.NEXT_PUBLIC_TRANS_REDIRECT_URI || '');
+        authUrl.searchParams.append('redirect_uri', process.env.TRANS_REDIRECT_URI || '');
 
         // Redirect to Trans.eu authorization page
         window.location.href = authUrl.toString();
