@@ -63,8 +63,8 @@ export default function TranseuStatusIndicator() {
                 <XCircle className="text-red-500" size={16}/>
             )}
             <span className="text-sm">
-        {status === "logged-in" ? "Zalogowany do Transeu" : "Nie zalogowany"}
-      </span>
+                {status === "logged-in" ? "Zalogowany do Transeu" : "Nie zalogowany"}
+            </span>
         </div>
     );
 }

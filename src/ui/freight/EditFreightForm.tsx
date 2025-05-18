@@ -1,5 +1,5 @@
 'use client';
-import {useActionState} from 'react';
+import {useState} from 'react';
 import {Card, CardContent} from "@/components/ui/card";
 import {TruckLoadRadioSelector} from "@/ui/freight/TruckLoadRadioSelector";
 import {Textarea} from "@/components/ui/textarea";
@@ -7,10 +7,11 @@ import {VehicleSelector} from "@/ui/freight/VehicleSelector";
 import {ExchangeSelector} from "@/ui/freight/ExchangeSelector";
 import {EditFreightButton} from "@/ui/freight/EditFreightButton";
 import {Key, LocationCard} from "@/ui/freight/LocationCard";
-import {updateFreight, State} from "@/lib/action";
+import {updateFreight, State} from "@/lib/freightService";
 import {LoadingAttributes} from "@/ui/freight/LoadingAttributes";
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {AlertCircle, Terminal} from "lucide-react";
+import {useRouter} from "next/navigation";
 
 export interface Freight {
     id?: string;
@@ -44,6 +45,7 @@ interface FormProps {
 }
 
 export default function Form({ freight }: FormProps) {
+    const router = useRouter();
     const initialState: State = {
         message: "",
         success: false,
@@ -52,72 +54,99 @@ export default function Form({ freight }: FormProps) {
             weight: freight.weight || '',
             length: freight.length || '',
             volume: freight.volume || '',
-            description: freight.description ,
+            description: freight.description,
             loadingCountry: freight.loadingCountry,
             loadingPostalCode: freight.loadingPostalCode,
             loadingPlace: freight.loadingPlace,
             loadingStartTime: freight.loadingStartTime,
             loadingEndTime: freight.loadingEndTime,
-            loadingStartDate: freight.loadingStartDate ,
-            loadingEndDate: freight.loadingEndDate ,
-            unloadingCountry: freight.unloadingCountry ,
+            loadingStartDate: freight.loadingStartDate,
+            loadingEndDate: freight.loadingEndDate,
+            unloadingCountry: freight.unloadingCountry,
             unloadingPostalCode: freight.unloadingPostalCode,
-            unloadingPlace: freight.unloadingPlace ,
+            unloadingPlace: freight.unloadingPlace,
             unloadingStartTime: freight.unloadingStartTime!,
             unloadingEndTime: freight.unloadingEndTime!,
-            unloadingStartDate: freight.unloadingStartDate ,
-            unloadingEndDate: freight.unloadingEndDate ,
+            unloadingStartDate: freight.unloadingStartDate,
+            unloadingEndDate: freight.unloadingEndDate,
             selectedCategories: freight.selectedCategories,
             selectedVehicles: freight.selectedVehicles,
             isFullTruck: freight.isFullTruck,
         }
     };
 
-    const [state, action, isPending] = useActionState(updateFreight, initialState);
+    const [state, setState] = useState<State>(initialState);
+    const [isPending, setIsPending] = useState(false);
+
+    const handleSubmit = async (formData: FormData) => {
+        setIsPending(true);
+        try {
+            formData.append('id', freight.id!);
+            const result = await updateFreight(formData);
+            setState(result);
+            if (result.success) {
+                router.push('/dashboard/freight');
+            }
+        } catch (error) {
+            setState({
+                isError: true,
+                isSuccess: false,
+                message: 'Wystąpił błąd podczas aktualizacji frachtu',
+                success: false,
+                inputs: state.inputs
+            });
+        } finally {
+            setIsPending(false);
+        }
+    };
 
     return (
-        <form action={action} className="flex flex-col gap-4 w-full">
-            <input type="hidden" name="id" value={freight.id || ''} />
-            <div className="flex flex-row gap-4">
-                <LocationCard locationKey={Key.Loading} state={state} />
-                <LocationCard locationKey={Key.Unloading} state={state} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <VehicleSelector state={state} className="w-full col-span-2"/>
-                <Card className="col-span-1">
-                    <CardContent className="flex flex-col gap-4 flex-1">
-                        <TruckLoadRadioSelector className="pb-4" state={state}/>
-                        <LoadingAttributes state={state}/>
-                        <Textarea 
-                            aria-invalid={!!state.errors?.description} 
-                            state={state} 
-                            name="description" 
-                            placeholder="Dodaj komentarz" 
-                            defaultValue={freight.description}
-                        />
-                        <ExchangeSelector/>
+        <form action={handleSubmit}>
+            <div className="flex flex-col gap-8">
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col gap-8">
+                            <TruckLoadRadioSelector state={state}/>
+                            <LoadingAttributes state={state}/>
+                            <LocationCard locationKey={Key.Loading} state={state}/>
+                            <LocationCard locationKey={Key.Unloading} state={state}/>
+                            <div className="flex flex-col gap-4">
+                                <Textarea
+                                    name="description"
+                                    placeholder="Opis"
+                                    className="min-h-[100px]"
+                                    defaultValue={state.inputs?.description}
+                                    state={state}
+                                />
+                                {state.errors?.description && (
+                                    <p className="text-sm text-red-500">{state.errors.description}</p>
+                                )}
+                            </div>
+                            <VehicleSelector state={state}/>
+                            <ExchangeSelector/>
+                        </div>
                     </CardContent>
                 </Card>
-                {state?.isError ? (
-                    <Alert variant="destructive" aria-invalid={true}>
-                        <AlertCircle className="h-4 w-4" />
+                {state.isError && (
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4"/>
                         <AlertTitle>Error</AlertTitle>
                         <AlertDescription>
-                            {state?.message}
+                            {state.message}
                         </AlertDescription>
                     </Alert>
-                ) : null}
-                {state?.isSuccess ? (
-                    <Alert variant="default" className="text-green-800">
-                        <Terminal className="h-4 w-4" />
-                        <AlertTitle>Heads up!</AlertTitle>
+                )}
+                {state.isSuccess && (
+                    <Alert>
+                        <Terminal className="h-4 w-4"/>
+                        <AlertTitle>Success</AlertTitle>
                         <AlertDescription>
-                            You can add components and dependencies to your app using the cli.
+                            {state.message}
                         </AlertDescription>
                     </Alert>
-                ) : null}
+                )}
+                <EditFreightButton isPending={isPending}/>
             </div>
-            <EditFreightButton isPending={isPending} className="self-start"/>
         </form>
     );
 }

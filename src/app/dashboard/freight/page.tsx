@@ -1,5 +1,5 @@
 import {CreateFreightLinkButton} from "@/ui/freight/CreateFreightLinkButton";
-import {getFreights} from "@/lib/action";
+import {getFreights} from "@/lib/freightService";
 import { DataTable } from "@/ui/freight/freight-table/data-table";
 import { columns } from "@/ui/freight/freight-table/columns";
 
