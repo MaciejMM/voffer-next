@@ -50,9 +50,9 @@ export default function Form() {
                         state?.isSuccess ?
                             <Alert variant="default" className=" text-green-800">
                                 <Terminal className="h-4 w-4" />
-                                <AlertTitle>Heads up!</AlertTitle>
+                                <AlertTitle>Oferta została utworzona pomyślnie</AlertTitle>
                                 <AlertDescription>
-                                    You can add components and dependencies to your app using the cli.
+                                    Oferta została utworzona pomyślnie w Trans.eu
                                 </AlertDescription>
                             </Alert> : <></>
 

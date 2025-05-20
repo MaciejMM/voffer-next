@@ -8,9 +8,10 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import {Button} from "@/components/ui/button";
-import {getTranseuAccessToken} from "@/utils/auth";
-import {redirect, useSearchParams} from "next/navigation";
+import {useSearchParams} from "next/navigation";
 import useStore from "@/store/store";
+import {useState} from "react";
+import {Loader2} from "lucide-react";
 
 
 type GenerateTokenDialogProps = {
@@ -20,20 +21,35 @@ type GenerateTokenDialogProps = {
 
 export const GenerateTokenDialog = (
     {
-        open,
-        onOpenChange
+        open
     }: GenerateTokenDialogProps
 ) => {
     const searchParams = useSearchParams();
     const { setStatus } = useStore();
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleGenerateToken = async () => {
-        const code:string = searchParams.get('code')!;
-        const response = await getTranseuAccessToken(code)
-        if(response) {
+        setIsLoading(true);
+        try {
+            const code:string = searchParams.get('code')!;
+            //call api/trans/auth with code
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/trans/auth`, {
+                method: 'POST',
+                body: JSON.stringify({code: code})
+            });
+            if (!response.ok) {
+                console.error('Failed to fetch access token');
+                return;
+            }
+            const data = await response.json();
+
+            //save data to local storage    
             setStatus("logged-in");
-            redirect('/dashboard');
-        } else {
+        } catch (error) {
+            console.error('Error generating token:', error);
             setStatus("logged-out");
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -49,7 +65,21 @@ export const GenerateTokenDialog = (
                 </DialogHeader>
                 <DialogFooter>
                     <div className="flex flex-row justify-start gap-4 py-4">
-                        <Button onClick={()=>handleGenerateToken()} className=" cursor-pointer" type="submit">Wygeneruj token</Button>
+                        <Button 
+                            onClick={()=>handleGenerateToken()} 
+                            className="cursor-pointer" 
+                            type="submit"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Generowanie...
+                                </>
+                            ) : (
+                                'Wygeneruj token'
+                            )}
+                        </Button>
                     </div>
                 </DialogFooter>
             </DialogContent>

@@ -59,6 +59,10 @@ export const LocationCard = ({
             id: `${props.locationKey}EndTime-error`
         },
         {
+            key: `${props.locationKey}StartDate` as keyof State['errors'],
+            id: `${props.locationKey}StartDate-error`
+        },
+        {
             key: `${props.locationKey}EndDate` as keyof State['errors'],
             id: `${props.locationKey}EndDate-error`
         }

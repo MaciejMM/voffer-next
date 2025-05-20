@@ -5,7 +5,6 @@ import * as React from "react";
 import {cn} from "@/lib/utils";
 import {State} from "@/lib/action";
 
-
 interface TimeSelectProps extends React.HTMLAttributes<HTMLDivElement> {
     state: State;
     locationKey: string;
@@ -34,11 +33,6 @@ const TimeSelect = ({
     const [selectedStartTime, setSelectedStartTime] = useState(startTimeInput ?? "");
     const [selectedEndTime, setSelectedEndTime] = useState(endTimeInput ?? "");
 
-    React.useEffect(() => {
-        setSelectedStartTime(startTimeInput ?? "");
-        setSelectedEndTime(endTimeInput ?? "");
-    }, [startTimeInput, endTimeInput]);
-
     const startTimes = generateTimeOptions();
     const [startHour, startMinute] = selectedStartTime ? selectedStartTime.split(":").map(Number) : [0, 0];
     const endTimes = generateTimeOptions(startHour, startMinute);
@@ -46,7 +40,7 @@ const TimeSelect = ({
     return (
         <div className={cn("grid grid-cols-2 gap-4", className)}>
 
-            <Select onValueChange={setSelectedStartTime} name={`${props.locationKey}StartTime`} value={selectedStartTime}>
+            <Select onValueChange={setSelectedStartTime} name={`${props.locationKey}StartTime`} >
                 <SelectTrigger className="w-full"
                                aria-invalid={!!state.errors?.[`${props.locationKey}StartTime` as keyof State['errors']]}>
                     <SelectValue placeholder="Start" aria-invalid={true}/>
@@ -60,7 +54,7 @@ const TimeSelect = ({
                 </SelectContent>
             </Select>
 
-            <Select onValueChange={setSelectedEndTime} name={`${props.locationKey}EndTime`} value={selectedEndTime}>
+            <Select onValueChange={setSelectedEndTime} name={`${props.locationKey}EndTime`}>
                 <SelectTrigger className="w-full"
                                aria-invalid={!!state.errors?.[`${props.locationKey}EndTime` as keyof State['errors']]}>
                     <SelectValue placeholder="Koniec"/>
