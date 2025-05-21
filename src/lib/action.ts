@@ -1,9 +1,7 @@
 'use server';
-import { cookies } from 'next/headers';
-
 import {z} from 'zod';
+import { cookies } from 'next/headers';
 import {getKindeServerSession} from "@kinde-oss/kinde-auth-nextjs/server";
-import {refreshAccessTokenFromApi} from "@/lib/actions/auth";
 import { getAccessToken } from './tokenStore';
 import { mapFreightFormToTransEuRequest } from './mappers/freightMapper';
 
@@ -212,7 +210,7 @@ export async function createFreight(prevState: State, formData: FormData): Promi
     }
 
 
-    const transEuRequest = mapFreightFormToTransEuRequest(rawFormData); 
+    const transEuRequest = mapFreightFormToTransEuRequest(rawFormData);
     console.log(transEuRequest);
 
     const transEuResponse = await fetch('https://api.platform.trans.eu/ext/freights-api/v1/freight-exchange', {
@@ -229,9 +227,9 @@ export async function createFreight(prevState: State, formData: FormData): Promi
     if (!transEuResponse.ok) {
         const errorData = await transEuResponse.json();
         console.log(errorData);
-        
+
         let errorMessage = 'Wystąpił błąd podczas tworzenia frachtu w Trans.eu';
-        
+
         if (errorData.validation_messages) {
             // Extract validation messages
             const validationMessages = Object.entries(errorData.validation_messages)
@@ -242,7 +240,7 @@ export async function createFreight(prevState: State, formData: FormData): Promi
                     return `${key}: ${JSON.stringify(value)}`;
                 })
                 .join(', ');
-            
+
             if (validationMessages) {
                 errorMessage = `Błąd walidacji: ${validationMessages}`;
             }
@@ -318,8 +316,10 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
     };
 
     // Get new access token
-    const tokenData = await refreshAccessTokenFromApi();
-    if (!tokenData) {
+    const cookieStore = await cookies();
+    const oldTokenId = cookieStore.get('trans_token_id');
+
+    if (!oldTokenId) {
         return {
             success: false,
             isError: true,
@@ -327,6 +327,18 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
             errors: {},
             message: 'Failed to refresh access token',
             inputs: rawFormData,
+        };
+    }
+    const tokenData = await getAccessToken(oldTokenId.value);
+
+
+    if (!tokenData) {
+        return {
+            isError: true,
+            isSuccess: false,
+            message: 'Brak tokenu dostępu do Trans.eu',
+            success: false,
+            inputs: rawFormData
         };
     }
 
@@ -342,14 +354,12 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
         };
     }
 
-    const {getAccessTokenRaw} = getKindeServerSession();
-    const kindeAccessToken = await getAccessTokenRaw();
 
+    const transEuRequest = mapFreightFormToTransEuRequest(rawFormData);
+    console.log(transEuRequest);
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/v1/freight/${rawFormData.id}`,
         {
             headers: {
-                "Authorization": `Bearer ${kindeAccessToken}`,
-                "Transeu-Access-Token": `Bearer ${tokenData.accessToken}`,
                 "Content-Type": "application/json",
             },
             method: 'PUT',
