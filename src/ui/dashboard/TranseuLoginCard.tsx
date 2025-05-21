@@ -1,27 +1,31 @@
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button";
 import TranseuStatusIndicator from "@/ui/dashboard/TranseuStatusIndicator";
-import { useRouter } from "next/navigation";
 
 export const TranseuLoginCard = () => {
-    const router = useRouter();
 
-    const handleLogin = () => {
-        // Generate a random state value
-        const state = Math.random().toString(36).substring(2, 15);
-        
-        // Store state in localStorage to verify it when user returns
-        localStorage.setItem('trans_auth_state', state);
+    const handleLogin = async () => {
 
-        // Construct the authorization URL
-        const authUrl = new URL('https://auth.platform.trans.eu/oauth2/auth');
-        authUrl.searchParams.append('client_id', process.env.TRANS_CLIENT_ID || '');
-        authUrl.searchParams.append('response_type', 'code');
-        authUrl.searchParams.append('state', state);
-        authUrl.searchParams.append('redirect_uri', process.env.TRANS_REDIRECT_URI || '');
+        //get code from url
+        const code = new URLSearchParams(window.location.search).get('code');
 
-        // Redirect to Trans.eu authorization page
-        window.location.href = authUrl.toString();
+        //add call to api/trans/auth as POSt with body {code: code, redirect_uri: process.env.NEXT_PUBLIC_TRANS_REDIRECT_URI}
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/trans/auth`, {
+            method: 'POST',
+            body: JSON.stringify({code: code})
+        });
+
+        if (!response.ok) {
+            console.error('Failed to fetch access token');
+            return;
+        }
+
+        const data = await response.json();
+        console.log(data);
+
+        //save data to local storage
+        localStorage.setItem('transeuAccessToken', data.access_token);
+
     };
 
     return (

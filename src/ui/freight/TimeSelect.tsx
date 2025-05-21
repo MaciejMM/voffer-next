@@ -3,8 +3,7 @@ import {useState} from "react";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import * as React from "react";
 import {cn} from "@/lib/utils";
-import { State } from "@/lib/freightService";
-
+import {State} from "@/lib/action";
 
 interface TimeSelectProps extends React.HTMLAttributes<HTMLDivElement> {
     state: State;
@@ -28,6 +27,7 @@ const TimeSelect = ({
                         state,
                         ...props
                     }: TimeSelectProps) => {
+
     let startTimeInput = state.inputs?.[`${props.locationKey}StartTime` as keyof State['inputs']];
     let endTimeInput = state.inputs?.[`${props.locationKey}EndTime` as keyof State['inputs']];
     const [selectedStartTime, setSelectedStartTime] = useState(startTimeInput ?? "");
@@ -39,11 +39,8 @@ const TimeSelect = ({
 
     return (
         <div className={cn("grid grid-cols-2 gap-4", className)}>
-            <Select
-                onValueChange={value => setSelectedStartTime(value)}
-                name={`${props.locationKey}StartTime`}
-                value={selectedStartTime}
-            >
+
+            <Select onValueChange={setSelectedStartTime} name={`${props.locationKey}StartTime`} >
                 <SelectTrigger className="w-full"
                                aria-invalid={!!state.errors?.[`${props.locationKey}StartTime` as keyof State['errors']]}>
                     <SelectValue placeholder="Start" aria-invalid={true}/>
@@ -57,11 +54,7 @@ const TimeSelect = ({
                 </SelectContent>
             </Select>
 
-            <Select
-                onValueChange={value => setSelectedEndTime(value)}
-                name={`${props.locationKey}EndTime`}
-                value={selectedEndTime}
-            >
+            <Select onValueChange={setSelectedEndTime} name={`${props.locationKey}EndTime`}>
                 <SelectTrigger className="w-full"
                                aria-invalid={!!state.errors?.[`${props.locationKey}EndTime` as keyof State['errors']]}>
                     <SelectValue placeholder="Koniec"/>

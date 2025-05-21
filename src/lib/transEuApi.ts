@@ -107,10 +107,9 @@ export const updateFreight = async (formData: FormData) => {
 };
 
 export const getFreights = async () => {
-    const token = await getTransEuToken();
     const response = await fetch(`${BASE_URL}/api/v1/freight`, {
         headers: {
-            "Transeu-Access-Token": `Bearer ${token}`,
+            "Transeu-Access-Token": `Bearer 1111`,
         },
     });
 
@@ -119,4 +118,4 @@ export const getFreights = async () => {
     }
 
     return response.json();
-}; 
+};

@@ -2,7 +2,6 @@
 
 import {useEffect} from "react";
 import {Skeleton} from "@/components/ui/skeleton";
-import {refreshTranseuAccessToken} from "@/utils/auth";
 import {CheckCircle2, XCircle} from "lucide-react";
 import useStore from "@/store/store";
 
@@ -12,20 +11,21 @@ export default function TranseuStatusIndicator() {
     useEffect(() => {
         const checkToken = async () => {
             setStatus("loading");
-
-            const existingToken = sessionStorage.getItem("transeuAccessToken");
-
-            if (existingToken) {
-                setStatus("logged-in");
-                return;
-            }
-
-            const newToken = await refreshTranseuAccessToken();
-            if (newToken) {
+            //call api/trans/auth put method
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/trans/auth`, {
+                method: 'PUT',
+                credentials: 'include',
+            });
+            
+            if (response.ok) {
                 setStatus("logged-in");
             } else {
                 setStatus("logged-out");
             }
+
+            const data = await response.json();
+            console.log(data);
+
         };
 
         checkToken();

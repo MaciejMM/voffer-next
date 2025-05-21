@@ -100,4 +100,4 @@ export const updateFreight = async (formData: FormData): Promise<State> => {
     }
 };
 
-export const getFreights = getTransEuFreights; 
+export const getFreights = getTransEuFreights;

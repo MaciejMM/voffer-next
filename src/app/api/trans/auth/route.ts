@@ -1,12 +1,14 @@
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { randomUUID } from 'crypto';
+import { deleteAccessToken, saveAccessToken } from '@/lib/tokenStore';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { code, redirect_uri } = body;
+  const { code } = body;
 
-  if (!code || !redirect_uri) {
-    return NextResponse.json({ error: 'Missing code or redirect_uri' }, { status: 400 });
+  if (!code) {
+    return NextResponse.json({ error: 'Missing code' }, { status: 400 });
   }
 
   const grant_type = 'authorization_code';
@@ -43,15 +45,33 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     const { access_token, expires_in, token_type, scope, refresh_token } = data;
 
-    if (refresh_token) {
-      const cookieStore = await cookies();
-      cookieStore.set('transeu_refresh_token', refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 30 * 24 * 60 * 60, // 30 days
-        path: '/',
-      });
-    }
+    // if (refresh_token) {
+    //   const cookieStore = await cookies();
+    //   cookieStore.set('transeu_refresh_token', refresh_token, {
+    //     httpOnly: true,
+    //     secure: process.env.NODE_ENV === 'production',
+    //     maxAge: 30 * 24 * 60 * 60, // 30 days
+    //     path: '/',
+    //   });
+    // }
+    const tokenId = randomUUID(); // Unikalny ID
+    await saveAccessToken(tokenId, access_token); // Zapisz token w store
+
+    const cookieStore = await cookies();
+
+    cookieStore
+      .set('trans_token_id', tokenId, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/',
+    }).set('trans_refresh_token', refresh_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/',
+    });
+
 
     return NextResponse.json({ access_token, expires_in, token_type, scope });
   } catch (error) {
@@ -61,12 +81,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT() {
-  try {
     const cookieStore = await cookies();
-    const refreshToken = cookieStore.get('transeu_refresh_token');
-
-    if (!refreshToken) {
-      return NextResponse.json({ error: 'No refresh token found' }, { status: 401 });
+    const tokenIdCookie = cookieStore.get('trans_refresh_token');
+    const oldTokenId = cookieStore.get('trans_token_id');
+    if (!tokenIdCookie || !oldTokenId) {
+      return NextResponse.json({ error: 'No token id found' }, { status: 401 });
     }
 
     const client_id = process.env.TRANS_CLIENT_ID;
@@ -77,6 +96,7 @@ export async function PUT() {
       return NextResponse.json({ error: 'Missing Trans.eu API credentials in environment variables' }, { status: 500 });
     }
 
+
     const response = await fetch('https://api.platform.trans.eu/ext/auth-api/accounts/token', {
       method: 'POST',
       headers: {
@@ -85,7 +105,7 @@ export async function PUT() {
       },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
-        refresh_token: refreshToken.value,
+        refresh_token: tokenIdCookie.value,
         client_id: client_id,
         client_secret: client_secret,
       }),
@@ -94,17 +114,17 @@ export async function PUT() {
     if (!response.ok) {
       const errorData = await response.json();
       // If refresh token is invalid/expired, clear it from cookies
-      if (response.status === 400 || response.status === 401) {
-        cookieStore.delete('transeu_refresh_token');
-      }
       return NextResponse.json({ error: 'Failed to refresh token', details: errorData }, { status: response.status });
     }
-
+    
     const data = await response.json();
     const { access_token, expires_in, token_type, refresh_token: new_refresh_token } = data;
 
+    await deleteAccessToken(oldTokenId.value);
+    const newTokenId = randomUUID(); // Unikalny ID
+    await saveAccessToken(newTokenId, access_token); // Zapisz token w store
     // Set the new access token in the response
-    const responseWithToken = NextResponse.json({ 
+    const responseWithToken = NextResponse.json({
       access_token,
       expires_in,
       token_type
@@ -112,17 +132,20 @@ export async function PUT() {
 
     // If we got a new refresh token, update it in cookies
     if (new_refresh_token) {
-      responseWithToken.cookies.set('transeu_refresh_token', new_refresh_token, {
+      responseWithToken.cookies
+      .set('trans_token_id', newTokenId, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        path: '/',
+      })
+      .set('trans_refresh_token', new_refresh_token, {
+        httpOnly: true,
+        secure: true,
         maxAge: 30 * 24 * 60 * 60, // 30 days
         path: '/',
       });
     }
 
     return responseWithToken;
-  } catch (error) {
-    console.error('Error refreshing token:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-} 
+}
