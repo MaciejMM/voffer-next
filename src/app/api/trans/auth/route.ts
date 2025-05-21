@@ -1,8 +1,7 @@
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { randomUUID } from 'crypto';
-import { deleteAccessToken, getAccessToken, saveAccessToken } from '@/lib/tokenStore';
+import { deleteAccessToken, saveAccessToken } from '@/lib/tokenStore';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -117,7 +116,7 @@ export async function PUT() {
       // If refresh token is invalid/expired, clear it from cookies
       return NextResponse.json({ error: 'Failed to refresh token', details: errorData }, { status: response.status });
     }
-
+    
     const data = await response.json();
     const { access_token, expires_in, token_type, refresh_token: new_refresh_token } = data;
 
