@@ -1,3 +1,4 @@
+import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 import {  validateFreightData } from './transEuService';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
@@ -107,9 +108,11 @@ export const updateFreight = async (formData: FormData) => {
 };
 
 export const getFreights = async () => {
+    const {getAccessTokenRaw} = getKindeServerSession();
+    const accessToken = await getAccessTokenRaw();
     const response = await fetch(`${BASE_URL}/api/v1/freight`, {
         headers: {
-            "Transeu-Access-Token": `Bearer 1111`,
+            "Authorization": `Bearer ${accessToken}`,
         },
     });
 

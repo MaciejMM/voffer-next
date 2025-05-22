@@ -33,7 +33,9 @@ const UserActionsCell = ({ user }: { user: User }) => {
 
     const handleDelete = async () => {
         try {
-            const result = await deleteUser(user.id.toString());
+            const formData = new FormData();
+            formData.append('id', user.id.toString());
+            const result = await deleteUser({ success: false, error: '', message: '' }, formData);
             if (result.success) {
                 toast({
                     title: "Success",
@@ -98,8 +100,6 @@ const UserActionsCell = ({ user }: { user: User }) => {
 
 
 export const columns: ColumnDef<User>[] = [
-
-
     {
         accessorKey: "id",
         header: "ID",
@@ -116,11 +116,6 @@ export const columns: ColumnDef<User>[] = [
         accessorKey: "email",
         header: "Email",
     },
-
-    {
-        accessorKey: "username",
-        header: "Username",
-    },
     {
         accessorKey: "title",
         header: "Title",
@@ -128,6 +123,5 @@ export const columns: ColumnDef<User>[] = [
     {
         id: "actions",
         cell: ({ row }) => <UserActionsCell user={row.original} />,
-
     },
 ]

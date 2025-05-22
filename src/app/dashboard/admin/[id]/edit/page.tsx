@@ -1,35 +1,30 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { notFound } from "next/navigation";
-import EditUserForm from "@/ui/admin/EditUserForm";
+import {  fetchUser } from '@/lib/actions/admin';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EditUserForm from '@/ui/admin/EditUserForm';
 
-
-async function getUserData(id: string) {
-    const { getAccessTokenRaw } = getKindeServerSession();
-    const accessToken = await getAccessTokenRaw();
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/v1/admin/${id}`, {
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-        },
-        cache: 'no-store'
-    });
-
-    if (!response.ok) {
-        notFound();
-    }
-
-    return response.json();
-}
 
 export default async function EditUserPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     const id = params.id;
+    const user = await fetchUser(id);
 
-    try {
-        const user = await getUserData(id);
-        return <EditUserForm user={user} />;
-    } catch (error) {
-        notFound();
+    if (!user) {
+        return <div>User not found</div>;
     }
+
+    return (
+        <div className="flex flex-col gap-8">
+            <h3 className="text-2xl font-semibold tracking-tight">
+                Edit User
+            </h3>
+            <Card className="w-full max-w-2xl">
+                <CardHeader>
+                    <CardTitle>User Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <EditUserForm user={user} />
+                </CardContent>
+            </Card>
+        </div>
+    );
 } 

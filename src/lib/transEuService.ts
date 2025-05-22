@@ -112,17 +112,6 @@ export const refreshTransEuToken = async () => {
     }
 };
 
-export const getTransEuToken = async () => {
-    const token = sessionStorage.getItem('trans_access_token');
-    const expiryTime = sessionStorage.getItem(TOKEN_EXPIRY_KEY);
-
-    // If no token or token is expired (with 5 minute buffer), refresh it
-    if (!token || !expiryTime || Date.now() > parseInt(expiryTime) - 300000) {
-        return await refreshTransEuToken();
-    }
-
-    return token;
-};
 
 export const validateFreightData = (data: any) => {
     return FormSchema.safeParse(data);

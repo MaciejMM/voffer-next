@@ -45,17 +45,8 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     const { access_token, expires_in, token_type, scope, refresh_token } = data;
 
-    // if (refresh_token) {
-    //   const cookieStore = await cookies();
-    //   cookieStore.set('transeu_refresh_token', refresh_token, {
-    //     httpOnly: true,
-    //     secure: process.env.NODE_ENV === 'production',
-    //     maxAge: 30 * 24 * 60 * 60, // 30 days
-    //     path: '/',
-    //   });
-    // }
-    const tokenId = randomUUID(); // Unikalny ID
-    await saveAccessToken(tokenId, access_token); // Zapisz token w store
+    const tokenId = randomUUID(); 
+    await saveAccessToken(tokenId, access_token); 
 
     const cookieStore = await cookies();
 

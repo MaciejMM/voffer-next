@@ -13,7 +13,6 @@ export default async function Page() {
             </h3>
             <CreateFreightLinkButton/>
             <DataTable columns={columns} data={freights} />
-
         </div>
     );
 };
