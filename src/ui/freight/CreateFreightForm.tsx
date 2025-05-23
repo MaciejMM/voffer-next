@@ -7,15 +7,15 @@ import {VehicleSelector} from "@/ui/freight/VehicleSelector";
 import {ExchangeSelector} from "@/ui/freight/ExchangeSelector";
 import {CreateFreightButton} from "@/ui/freight/CreateFreightButton";
 import {Key, LocationCard} from "@/ui/freight/LocationCard";
-import {createFreight, State} from "@/lib/action";
+import {createFreightAction, State} from "@/lib/action";
 import {LoadingAttributes} from "@/ui/freight/LoadingAttributes";
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {AlertCircle, Terminal} from "lucide-react";
 
 
 export default function Form() {
-    const initialState: State = {message: "", success: false, errors: {}, inputs: {}};
-    const [state, action, isPending] = useActionState(createFreight, initialState);
+    const initialState: State = {message: "", success: false, isError: false, isSuccess: false, inputs: {}, errors: {}};
+    const [state, action, isPending] = useActionState(createFreightAction, initialState);
 
     
     return (

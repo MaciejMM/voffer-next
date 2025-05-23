@@ -18,7 +18,7 @@ export const LoadingAttributes = ({state}: { state: State }) => {
                             <Label htmlFor={attribute.name}>{attribute.label}</Label>
                             <Input
                                 aria-invalid={!!state.errors?.[attribute.name as keyof State['errors']]}
-                                defaultValue={state.inputs?.[attribute.name as keyof State['inputs']]}
+                                defaultValue={String(state.inputs?.[attribute.name as keyof State['inputs']] ?? '')}
                                 name={attribute.name}
                                 type="number"
                                 min={attribute.min}

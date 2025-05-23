@@ -34,7 +34,7 @@ const TimeSelect = ({
     const [selectedEndTime, setSelectedEndTime] = useState(endTimeInput ?? "");
 
     const startTimes = generateTimeOptions();
-    const [startHour, startMinute] = selectedStartTime ? selectedStartTime.split(":").map(Number) : [0, 0];
+    const [startHour, startMinute] = selectedStartTime ? (selectedStartTime as string).split(":").map(Number) : [0, 0];
     const endTimes = generateTimeOptions(startHour, startMinute);
 
     return (

@@ -48,6 +48,8 @@ export default function Form({ freight }: FormProps) {
         message: "",
         success: false,
         errors: {},
+        isError: false,
+        isSuccess: false,
         inputs: {
             weight: freight.weight || '',
             length: freight.length || '',

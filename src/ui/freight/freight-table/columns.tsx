@@ -1,6 +1,6 @@
 "use client"
 
-import {ColumnDef} from "@tanstack/react-table"
+import { ColumnDef } from "@tanstack/react-table"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,199 +9,173 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {CheckCircle2, CheckIcon, MoreHorizontal, XCircle} from "lucide-react"
-import {Button} from "@/components/ui/button";
+import { CheckCircle2, MoreHorizontal, XCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-type Freight = {
-    id: number;
-    weight: string;
-    length: string;
-    volume: string;
-    description: string;
-    loadingPlace: {
-        country: string;
-        place: string;
-        postalCode: string;
-        startDate: string;
-        endDate: string;
-        startTime: string;
-        endTime: string;
+export interface Freight {
+    id: string;
+    transeuId: string | null;
+    rawFormData: {
+        loadingCountry:string;
+        loadingPostalCode:string;
+        loadingPlace:string;
+        loadingStartTime:string;
+        loadingEndTime:string;
+        loadingDate:string;
+        loadingStartDate:string;
+        loadingEndDate:string;
+        unloadingCountry:string;
+        unloadingPostalCode:string;
+        unloadingPlace:string;
+        unloadingStartTime:string;
+        unloadingEndTime:string;
+        unloadingDate:string;
+        unloadingStartDate:string;
+        unloadingEndDate:string;
+        weight: string;
+        length: string;
+        volume: string;
+        description: string;
+        selectedCategories: string[];
+        selectedVehicles: string[];
+        isFullTruck: boolean;
+        transEuResponse?: any;
     };
-    unloadingPlace: {
-        country: string;
-        place: string;
-        postalCode: string;
-        startDate: string;
-        endDate: string;
-        startTime: string;
-        endTime: string;
-    };
-    selectedCategories: {
-        name: string;
-    }[];
-    selectedVehicles: {
-        name: string;
-    }[];
-    isFullTruck: boolean;
-    publishDateTime: string | null;
-    publishSelected: string | null;
-    telerouteFreightId: string | null;
-    telerouteExternalId: string | null;
-    transeuFreightId: string | null;
-    createdBy: string;
-    updatedBy: string | null;
-    createdDate: string | null;
-    updatedDate: string | null;
-    userId: string | null;
-};
+    userId: string;
+    isActive: boolean | null;
+    createdAt: Date | null;
+    updatedAt: Date | null;
+}
 
 export const columns: ColumnDef<Freight>[] = [
-
     {
-        accessorKey: "loadingPlace.place",
+        accessorKey: "rawFormData.loadingPlace.place",
         header: "Załadunek",
-        cell: ({row}) => {
-            const {country, place,postalCode} = row.original.loadingPlace;
-
-            const countryClass = `fi fi-${country.toLowerCase()}`;
+        cell: ({ row }) => {
+            const { loadingCountry, loadingPlace, loadingPostalCode } = row.original.rawFormData;
+            const countryClass = `fi fi-${loadingCountry.toLowerCase()}`;
             return (
                 <div className="flex flex-row gap-x-1">
                     <span className={countryClass}></span>
-                    <span>{country}</span>
-                    <span>{postalCode}</span>
-                    <span
-                        className="text-sm font-medium text-gray-900 ">{place}
-                    </span>
-
+                    <span>{loadingCountry}</span>
+                    <span>{loadingPostalCode}</span>
+                    <span className="text-sm font-medium text-gray-900">{loadingPlace}</span>
                 </div>
             );
         }
     },
     {
-        accessorKey: "loadingPlace",
+        accessorKey: "rawFormData.loadingPlace",
         header: "Data i czas załadunku",
-        cell: ({row}) => {
-            const {startDate, startTime, endDate, endTime} = row.original.loadingPlace;
-            const formatDate = (date: string) => {
-                return new Date(date).toISOString().split("T")[0];
-            };
+        cell: ({ row }) => {
+            const { loadingStartDate, loadingStartTime, loadingEndDate, loadingEndTime } = row.original.rawFormData;
+           
             return (
                 <div className="flex flex-col">
-                    <span
-                        className="text-sm font-medium text-gray-900">{formatDate(startDate)} - {formatDate(endDate)}</span>
-                    <span className="text-xs text-gray-500">{startTime}-{endTime}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                        {loadingStartDate} - {loadingEndDate}
+                    </span>
+                    <span className="text-xs text-gray-500">{loadingStartTime}-{loadingEndTime}</span>
                 </div>
             );
         },
     },
     {
-        accessorKey: "unloadingPlace.country",
+        accessorKey: "rawFormData.unloadingPlace.place",
         header: "Rozładunek",
-        cell: ({row}) => {
-            const {country, place,postalCode} = row.original.unloadingPlace;
-            const countryClass = `fi fi-${country.toLowerCase()}`;
+        cell: ({ row }) => {
+            const { unloadingCountry, unloadingPlace, unloadingPostalCode } = row.original.rawFormData;
+            const countryClass = `fi fi-${unloadingCountry.toLowerCase()}`;
             return (
                 <div className="flex flex-row gap-x-1">
                     <span className={countryClass}></span>
-                    <span>{country}</span>
-                    <span>{postalCode}</span>
-                    <span
-                        className="text-sm font-medium text-gray-900 ">{place}
-                    </span>
-
+                    <span>{unloadingCountry}</span>
+                    <span>{unloadingPostalCode}</span>
+                    <span className="text-sm font-medium text-gray-900">{unloadingPlace}</span>
                 </div>
             );
         }
     },
     {
-        accessorKey: "unloadingPlace",
+        accessorKey: "rawFormData.unloadingPlace",
         header: "Data i czas rozładunku",
-        cell: ({row}) => {
-            const {startDate, startTime, endDate, endTime} = row.original.unloadingPlace;
-            const formatDate = (date: string) => {
-                return new Date(date).toISOString().split("T")[0];
-            };
+        cell: ({ row }) => {
+            const { unloadingStartDate, unloadingStartTime, unloadingEndDate, unloadingEndTime } = row.original.rawFormData;
+   
             return (
                 <div className="flex flex-col">
-                    <span
-                        className="text-sm font-medium text-gray-900">{formatDate(startDate)} - {formatDate(endDate)}</span>
-                    <span className="text-xs text-gray-500">{startTime}-{endTime}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                        {unloadingStartDate} - {unloadingEndDate}
+                    </span>
+                    <span className="text-xs text-gray-500">{unloadingStartTime}-{unloadingEndTime}</span>
                 </div>
             );
         },
     },
     {
-        accessorKey: "Vehicle",
+        accessorKey: "rawFormData.selectedVehicles",
         header: "Pojazd",
-        cell: ({row}) => {
+        cell: ({ row }) => {
             return (
                 <div className="flex flex-col">
-                    {
-                        row.original.selectedVehicles.map((vehicle, index) => (
-                            <span key={index} className="text-sm  text-gray-900">{vehicle.name}</span>
-                        ))
-                    }
-
+                    {row.original.rawFormData.selectedVehicles.map((vehicle, index) => (
+                        <span key={index} className="text-sm text-gray-900">{vehicle}</span>
+                    ))}
                 </div>
             );
         },
     },
     {
-        accessorKey: "VehicleType",
+        accessorKey: "rawFormData.selectedCategories",
         header: "Typ pojazdu",
-        cell: ({row}) => {
+        cell: ({ row }) => {
             return (
                 <div className="flex flex-col">
-                    {
-                        row.original.selectedCategories.map((vehicle, index) => (
-                            <span key={index} className="text-sm  text-gray-900">{vehicle.name}</span>
-                        ))
-                    }
-
+                    {row.original.rawFormData.selectedCategories.map((vehicle, index) => (
+                        <span key={index} className="text-sm text-gray-900">{vehicle}</span>
+                    ))}
                 </div>
             );
         },
     },
-
-
     {
-        accessorKey: "weight",
+        accessorKey: "rawFormData.weight",
         header: "Waga",
     },
     {
-        accessorKey: "length",
+        accessorKey: "rawFormData.length",
         header: "Długość",
     },
     {
-        accessorKey: "volume",
+        accessorKey: "rawFormData.volume",
         header: "Wolumen",
     },
     {
-        accessorKey: "isFullTruck",
+        accessorKey: "rawFormData.isFullTruck",
         header: "F/L",
-        cell: ({row}) => {
-            const {isFullTruck} = row.original;
-
+        cell: ({ row }) => {
             return (
                 <div className="flex flex-col">
-                    <span className="text-sm text-gray-900">{isFullTruck ? "FTL" : "LTL"}</span>
+                    <span className="text-sm text-gray-900">
+                        {row.original.rawFormData.isFullTruck ? "FTL" : "LTL"}
+                    </span>
                 </div>
             );
         },
     },
     {
-        accessorKey: "transeuFreightId",
+        accessorKey: "transeuId",
         header: "TRANS.EU",
-        cell: ({row}) => {
-            const {transeuFreightId} = row.original;
-
+        cell: ({ row }) => {
             return (
                 <div className="flex flex-col justify-center">
-                    <span className="text-sm text-gray-900">{transeuFreightId !== null ?
-                        <CheckCircle2 className="text-green-500" size={16}/>
-                        : <XCircle className="text-red-500" size={16}/>
-
-                    }</span>
+                    <span className="text-sm text-gray-900">
+                        {row.original.transeuId ? (
+                            <CheckCircle2 className="text-green-500" size={16} />
+                        ) : (
+                            <XCircle className="text-red-500" size={16} />
+                        )}
+                    </span>
                 </div>
             );
         },
@@ -209,7 +183,6 @@ export const columns: ColumnDef<Freight>[] = [
     {
         id: "actions",
         cell: ({ row }) => {
- 
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -221,17 +194,19 @@ export const columns: ColumnDef<Freight>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Akcje</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(row.original.id.toString())}
+                            onClick={() => navigator.clipboard.writeText(row.original.id)}
                         >
-                            Copy payment ID
+                            Copy ID
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={()=>{
+                        <DropdownMenuItem onClick={() => {
                             window.location.href = `/dashboard/freight/${row.original.id}/edit`
-                        }}>Edytuj Fracht</DropdownMenuItem>
+                        }}>
+                            Edytuj Fracht
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             )
         },
     },
-]
+];

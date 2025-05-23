@@ -22,11 +22,13 @@ export const CountrySelect = ({
                                   state,
                                   ...props
                               }: CountrySelectProps) => {
-    const [selectedValue, setSelectedValue] = React.useState(state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']] ?? "");
+    const [selectedValue, setSelectedValue] = React.useState<string>(
+        (state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']] as string) ?? ""
+    );
     let countryInput = state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']];
 
     React.useEffect(() => {
-        setSelectedValue(state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']] ?? "");
+        setSelectedValue((state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']] as string) ?? "");
     }, [countryInput, props.locationKey, state.inputs]);
 
     const countries = [

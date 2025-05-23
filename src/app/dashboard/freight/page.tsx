@@ -1,19 +1,14 @@
-import {CreateFreightLinkButton} from "@/ui/freight/CreateFreightLinkButton";
-import {getFreights} from "@/lib/freightService";
-import { DataTable } from "@/ui/freight/freight-table/data-table";
-import { columns } from "@/ui/freight/freight-table/columns";
+import { Suspense } from "react"
+import { FreightTable } from "@/ui/freight/freight-table/freight-table"
+import { FreightSkeleton } from "@/ui/freight/freight-table/freight-skeleton"
 
-
-export default async function Page() {
-    const freights = await getFreights();
+export default function FreightPage() {
     return (
-        <div className="container flex flex-col gap-8">
-            <h3 className="text-2xl font-semibold tracking-tight">
-                Twoje Frachty
-            </h3>
-            <CreateFreightLinkButton/>
-            <DataTable columns={columns} data={freights} />
+        <div className="container mx-auto py-10">
+            <Suspense fallback={<FreightSkeleton />}>
+                <FreightTable />
+            </Suspense>
         </div>
-    );
-};
+    )
+}
 

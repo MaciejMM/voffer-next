@@ -4,7 +4,7 @@ import {Separator} from "@/components/ui/separator";
 import {CardTitle} from "@/components/ui/card";
 import * as React from "react";
 import {State} from "@/lib/action";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 
 const vehicleData = [
     {type: "curtainsider", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},
@@ -14,11 +14,11 @@ const vehicleData = [
     {type: "open-box", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},
     {type: "isotherm", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},
     {type: "meathanging", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},
-    {type: "food-tanker", any_size: false, bus: false, lorry: true, double_trailer: true, solo: true},
-    {type: "tanker", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},
+    {type: "food-tanker", any_size: false, bus: false, lorry: true, double_trailer: true, solo: false},
+    {type: "tanker", any_size: true, bus: false, lorry: true, double_trailer: true, solo: true},
     {type: "other", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},
     {type: "car-transporter", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},
-    {type: "dump-truck", any_size: false, bus: true, lorry: true, double_trailer: true, solo: true},
+    {type: "dump-truck", any_size: false, bus: false, lorry: true, double_trailer: true, solo: true},
     {type: "petroleum-tanker", any_size: false, bus: false, lorry: true, double_trailer: true, solo: true},
     {type: "chemical-tanker", any_size: false, bus: false, lorry: true, double_trailer: true, solo: true},
     {type: "gas-tanker", any_size: false, bus: false, lorry: true, double_trailer: true, solo: true},
@@ -39,7 +39,7 @@ const vehicleData = [
     {type: "walkingfloor", any_size: false, bus: false, lorry: true, double_trailer: false, solo: true},
     {type: "tank-body-20", any_size: false, bus: false, lorry: true, double_trailer: true, solo: false},
     {type: "tank-body-40", any_size: false, bus: false, lorry: true, double_trailer: true, solo: false},
-    {type: "jumbo", any_size: false, bus: false, lorry: false, double_trailer: true, solo: false}
+    {type: "jumbo", any_size: false, bus: false, lorry: false, double_trailer: false, solo: false}
 ];
 
 const vehicleCategories = ["any_size", "bus", "lorry", "double_trailer", "solo"];
@@ -51,10 +51,10 @@ export type VehicleFilterProps = {
 };
 
 export const VehicleFilter = ({
-                                  className,
-                                  state,
-                                  ...props
-                              }: VehicleFilterProps) => {
+    className,
+    state,
+    ...props
+}: VehicleFilterProps) => {
     const [selectedCategories, setSelectedCategories] = useState<VehicleCategory[]>(state.inputs?.selectedCategories ?? []);
     const [selectedVehicles, setSelectedVehicles] = useState<string[]>(state.inputs?.selectedVehicles ?? []);
 
@@ -64,25 +64,55 @@ export const VehicleFilter = ({
                 ? prev.filter((c) => c !== category)
                 : [...prev, category];
 
-            if (category !== "any_size") {
-                newCategories = newCategories.filter((c) => c !== "any_size");
-            } else {
+            if (category === "any_size") {
+                // If any_size is being selected, clear other categories
                 newCategories = ["any_size"];
+                // Reset vehicle selection since any_size means all vehicles are valid
+                setSelectedVehicles([]);
+            } else {
+                // If any other category is being selected, remove any_size
+                newCategories = newCategories.filter((c) => c !== "any_size");
+                // Filter vehicles based on the selected categories
+                setSelectedVehicles((prevVehicles) =>
+                    prevVehicles.filter((vehicle) =>
+                        vehicleData.find((v) => v.type === vehicle && newCategories.some((c) => v[c as keyof typeof v]))
+                    )
+                );
             }
-
-            setSelectedVehicles((prevVehicles) =>
-                prevVehicles.filter((vehicle) =>
-                    vehicleData.find((v) => v.type === vehicle && newCategories.some((c) => v[c as keyof typeof v]))
-                )
-            );
 
             return newCategories;
         });
     };
+
     const handleVehicleChange = (vehicle: string) => {
         setSelectedVehicles((prev) =>
             prev.includes(vehicle) ? prev.filter((v) => v !== vehicle) : [...prev, vehicle]
         );
+    };
+
+    const isVehicleValidForCategories = (vehicle: typeof vehicleData[0], categories: VehicleCategory[]) => {
+        if (categories.length === 0) return true;
+        if (categories.includes('any_size')) {
+            // When any_size is selected, only show vehicles that have any_size: true
+            return vehicle.any_size;
+        }
+        return categories.every(category => vehicle[category as keyof typeof vehicle]);
+    };
+
+    const isCategoryValidForVehicles = (category: VehicleCategory) => {
+        if (selectedVehicles.length === 0) return true;
+        // For any_size, check if all selected vehicles have any_size: true
+        if (category === 'any_size') {
+            return selectedVehicles.every(vehicleType => {
+                const vehicle = vehicleData.find(v => v.type === vehicleType);
+                return vehicle && vehicle.any_size;
+            });
+        }
+        // For other categories, check if all selected vehicles support that category
+        return selectedVehicles.every(vehicleType => {
+            const vehicle = vehicleData.find(v => v.type === vehicleType);
+            return vehicle && vehicle[category as keyof typeof vehicle];
+        });
     };
 
     return (
@@ -98,9 +128,12 @@ export const VehicleFilter = ({
                                 id={category}
                                 name="selectedCategories"
                                 value={category}
+                                disabled={!isCategoryValidForVehicles(category)}
                                 defaultChecked={selectedCategories.includes(category)}
                             />
-                            <label htmlFor={category}>{category}</label>
+                            <label htmlFor={category} className={!isCategoryValidForVehicles(category) ? "text-gray-500" : ""}>
+                                {category}
+                            </label>
                         </div>
                     ))}
                 </div>
@@ -109,7 +142,7 @@ export const VehicleFilter = ({
                     <CardTitle>Typ pojazdu</CardTitle>
                     <div className="grid grid-cols-5 lg:grid-cols-7 ">
                         {vehicleData.map((vehicle) => {
-                            const isValid = selectedCategories.length === 0 || selectedCategories.some((c) => vehicle[c as keyof typeof vehicle]);
+                            const isValid = isVehicleValidForCategories(vehicle, selectedCategories);
                             const isChecked = selectedVehicles.includes(vehicle.type);
 
                             return (

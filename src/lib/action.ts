@@ -1,34 +1,34 @@
 'use server';
 import {z} from 'zod';
 import { cookies } from 'next/headers';
-import {getKindeServerSession} from "@kinde-oss/kinde-auth-nextjs/server";
 import { getAccessToken } from './tokenStore';
 import { mapFreightFormToTransEuRequest } from './mappers/freightMapper';
+import { createFreight } from "@/lib/actions/freight";
 
 export interface FreightFormData {
-    weight?: string;
-    length?: string;
-    volume?: string;
-    description?: string;
-    loadingCountry?: string;
-    loadingPostalCode?: string;
-    loadingPlace?: string;
-    loadingStartTime?: string;
-    loadingEndTime?: string;
-    loadingDate?: string;
-    loadingStartDate?: string;
-    loadingEndDate?: string;
-    unloadingCountry?: string;
-    unloadingPostalCode?: string;
-    unloadingPlace?: string;
-    unloadingStartTime?: string;
-    unloadingEndTime?: string;
-    unloadingDate?: string;
-    unloadingStartDate?: string;
-    unloadingEndDate?: string;
-    selectedVehicles?: string[];
-    selectedCategories?: string[];
-    isFullTruck?: boolean;
+    weight: string;
+    length: string;
+    volume: string;
+    loadingCountry: string;
+    loadingPostalCode: string;
+    loadingPlace: string;
+    loadingStartTime: string;
+    loadingEndTime: string;
+    loadingDate: string;
+    loadingStartDate: string;
+    loadingEndDate: string;
+    unloadingCountry: string;
+    unloadingPostalCode: string;
+    unloadingPlace: string;
+    unloadingStartTime: string;
+    unloadingEndTime: string;
+    unloadingDate: string;
+    unloadingStartDate: string;
+    unloadingEndDate: string;
+    description: string;
+    selectedCategories: string[];
+    selectedVehicles: string[];
+    isFullTruck: boolean;
 }
 
 const FormSchema = z.object({
@@ -98,52 +98,25 @@ const FormSchema = z.object({
     description: z.string({
         invalid_type_error: 'Wprowadź opis',
     }).min(1, {message: 'Wprowadź opis'}),
-    selectedCategories: z.array(z.string()).min(1, {message: 'Wybierz minimum jeden rozmiar pojazdu'}),
-    selectedVehicles: z.array(z.string()).min(1, {message: 'Wybierz minimum jeden typ pojazdu'}),
+    selectedCategories: z.array(z.string()).min(1, {message: 'Wybierz minimum jedną kategorię'}),
+    selectedVehicles: z.array(z.string()).min(1, {message: 'Wybierz minimum jeden typ pojazdu'}).max(5, {message: 'Wybierz maksymalnie 5 typów pojazdów'}),
     isFullTruck: z.boolean(),
-
 });
 
 const CreateFreight = FormSchema;
 
-export type State = {
-    errors?: {
-        [K in keyof FreightFormData]?: string[];
-    },
-    isError?: boolean;
-    isSuccess?: boolean;
+export interface State {
     success: boolean;
+    isError: boolean;
+    isSuccess: boolean;
     message: string;
-    inputs?: {
-        // [key: string]: string | string[] | undefined;
-        weight?: string | undefined;
-        length?: string | undefined;
-        volume?: string | undefined;
-        loadingCountry?: string | undefined;
-        loadingPostalCode?: string | undefined;
-        loadingPlace?: string | undefined;
-        loadingStartTime?: string | undefined;
-        loadingEndTime?: string | undefined;
-        loadingDate?: string | undefined;
-        loadingStartDate?: string | undefined;
-        loadingEndDate?: string | undefined;
-        unloadingCountry?: string | undefined;
-        unloadingPostalCode?: string | undefined;
-        unloadingPlace?: string | undefined;
-        unloadingStartTime?: string | undefined;
-        unloadingEndTime?: string | undefined;
-        unloadingDate?: string | undefined;
-        unloadingStartDate?: string | undefined;
-        unloadingEndDate?: string | undefined;
-        description?: string | undefined;
-        selectedCategories?: string[] | undefined;
-        selectedVehicles?: string[] | undefined;
-        isFullTruck?: boolean | undefined;
-    }
-};
+    inputs: Partial<FreightFormData>;
+     errors?: {
+        [K in keyof FreightFormData]?: string[];
+    };
+}
 
-
-export async function createFreight(prevState: State, formData: FormData): Promise<State> {
+export async function createFreightAction(prevState: State, formData: FormData): Promise<State> {
     const rawFormData = {
         weight: formData.get('weight') as string,
         length: formData.get('length') as string,
@@ -163,13 +136,13 @@ export async function createFreight(prevState: State, formData: FormData): Promi
         unloadingEndTime: formData.get('unloadingEndTime') as string,
         unloadingDate: (formData.get('unloadingDate')?.toString() ?? '') as string,
         unloadingStartDate: formData.get('unloadingStartDate') as string,
-        unloadingEndDate: formData.get('unloadingEndDate')  as string,
+        unloadingEndDate: formData.get('unloadingEndDate') as string,
         description: formData.get('description') as string,
         selectedCategories: formData.getAll('selectedCategories') as string[],
         selectedVehicles: formData.getAll('selectedVehicles') as string[],
         isFullTruck: formData.get('isFullTruck') !== 'false',
     };
-
+    console.log(rawFormData);
     // Get new access token
     const cookieStore = await cookies();
     const oldTokenId = cookieStore.get('trans_token_id');
@@ -179,13 +152,12 @@ export async function createFreight(prevState: State, formData: FormData): Promi
             success: false,
             isError: true,
             isSuccess: false,
-            errors: {},
             message: 'Failed to refresh access token',
             inputs: rawFormData,
+            errors: {},
         };
     }
     const tokenData = await getAccessToken(oldTokenId.value);
-
 
     if (!tokenData) {
         return {
@@ -193,25 +165,26 @@ export async function createFreight(prevState: State, formData: FormData): Promi
             isSuccess: false,
             message: 'Brak tokenu dostępu do Trans.eu',
             success: false,
-            inputs: rawFormData
+            inputs: rawFormData,
+            errors: {},
         };
     }
 
     const validatedData = CreateFreight.safeParse(rawFormData);
     if (!validatedData.success) {
         return {
-            errors: validatedData.error.flatten().fieldErrors,
             isError: true,
             isSuccess: false,
             message: 'Uzupełnij wszystkie wymagane pola',
             success: false,
-            inputs: rawFormData
+            inputs: rawFormData,
+            errors: validatedData.error.flatten().fieldErrors
         };
     }
 
-
     const transEuRequest = mapFreightFormToTransEuRequest(rawFormData);
-    console.log(transEuRequest);
+    console.log(transEuRequest.requirements.vehicle_size);
+    console.log(transEuRequest.requirements);
 
     const transEuResponse = await fetch('https://api.platform.trans.eu/ext/freights-api/v1/freight-exchange', {
         method: 'POST',
@@ -246,46 +219,44 @@ export async function createFreight(prevState: State, formData: FormData): Promi
             }
         }
 
-
         return {
             isError: true,
             isSuccess: false,
             message: errorMessage,
             success: false,
-            inputs: rawFormData
+            inputs: rawFormData,
+            errors: {},
         };
     }
+
     const data = await transEuResponse.json();
-    console.log(data)
+    console.log(data);
+
+    // Store the freight data in the database
+    try {
+        await createFreight(rawFormData, data);
+    } catch (error) {
+        console.error('Error storing freight in database:', error);
+        return {
+            success: false,
+            isError: true,
+            isSuccess: false,
+            message: 'Oferta została utworzona w Trans.eu, ale wystąpił błąd podczas zapisywania w bazie danych.',
+            inputs: rawFormData,
+            errors: {},
+        };
+    }
+
     return {
         success: true,
         isError: false,
         isSuccess: true,
-        errors: {},
         message: 'Oferta została utworzona pomyślnie.',
         inputs: rawFormData,
+        errors: {},
     };
 }
 
-export async function getFreights() {
-
-    const {getAccessTokenRaw} = getKindeServerSession();
-    const accessToken = await getAccessTokenRaw();
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/v1/freight`,
-        {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            method: 'GET',
-        });
-
-    if (!res.ok) {
-        throw new Error('Failed to fetch data')
-    }
-
-    return await res.json();
-}
 
 export async function updateFreight(prevState: State, formData: FormData): Promise<State> {
     const rawFormData = {
@@ -324,9 +295,9 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
             success: false,
             isError: true,
             isSuccess: false,
-            errors: {},
             message: 'Failed to refresh access token',
             inputs: rawFormData,
+            errors: {},
         };
     }
     const tokenData = await getAccessToken(oldTokenId.value);
@@ -338,19 +309,23 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
             isSuccess: false,
             message: 'Brak tokenu dostępu do Trans.eu',
             success: false,
-            inputs: rawFormData
+            inputs: rawFormData,
+            errors: {},
         };
     }
 
     const validatedData = CreateFreight.safeParse(rawFormData);
     if (!validatedData.success) {
         return {
-            errors: validatedData.error.flatten().fieldErrors,
             isError: true,
             isSuccess: false,
-            message: 'Uzupełnij wszystkie wymagane pola',
+            message: 'Uzupełnij wszystkie wymagane pola' + JSON.stringify(validatedData.error.flatten().fieldErrors),
             success: false,
-            inputs: rawFormData
+            inputs: rawFormData,
+            errors: Object.fromEntries(
+                Object.entries(validatedData.error.flatten().fieldErrors)
+                    .map(([key, value]) => [key, value[0]])
+            ),
         };
     }
 
@@ -372,7 +347,8 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
             isSuccess: false,
             message: 'Wystąpił błąd podczas aktualizacji frachtu',
             success: false,
-            inputs: rawFormData
+            inputs: rawFormData,
+            errors: {},
         };
     }
 
@@ -380,9 +356,9 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
         success: true,
         isError: false,
         isSuccess: true,
-        errors: {},
         message: 'Oferta została zaktualizowana pomyślnie.',
         inputs: {},
+        errors: {},
     };
 }
 
