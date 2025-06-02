@@ -12,6 +12,7 @@ import {useSearchParams} from "next/navigation";
 import useStore from "@/store/store";
 import {useState} from "react";
 import {Loader2} from "lucide-react";
+import {useToast} from "@/components/ui/use-toast";
 
 
 type GenerateTokenDialogProps = {
@@ -21,12 +22,14 @@ type GenerateTokenDialogProps = {
 
 export const GenerateTokenDialog = (
     {
-        open
+        open,
+        onOpenChange
     }: GenerateTokenDialogProps
 ) => {
     const searchParams = useSearchParams();
     const { setStatus } = useStore();
     const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
 
     const handleGenerateToken = async () => {
         setIsLoading(true);
@@ -45,16 +48,27 @@ export const GenerateTokenDialog = (
 
             //save data to local storage    
             setStatus("logged-in");
+            toast({
+                title: "Sukces",
+                description: "Token został wygenerowany poprawnie.",
+                variant: "default",
+            });
+            onOpenChange(false);
         } catch (error) {
             console.error('Error generating token:', error);
             setStatus("logged-out");
+            toast({
+                title: "Błąd",
+                description: "Nie udało się wygenerować tokenu.",
+                variant: "destructive",
+            });
         } finally {
             setIsLoading(false);
         }
     }
 
     return (
-        <Dialog open={open}>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Zaloguj się do TRANS.EU

@@ -32,45 +32,38 @@ interface TransEuFreightRequest {
   }[];
 }
 
-const ALLOWED_VEHICLE_SIZE_COMBINATIONS = [
-  'bus_lorry',
-  'double_trailer_lorry',
-  'lorry_solo',
-  'bus_double_trailer',
-  'bus_solo',
-  'double_trailer_solo',
-  'bus_double_trailer_lorry',
-  'bus_lorry_solo',
-  'double_trailer_lorry_solo',
-  'bus_double_trailer_solo'
-];
-
-// Define the order of vehicle types for consistent combination
-const VEHICLE_TYPE_ORDER = {
-  'bus': 1,
-  'double_trailer': 2,
-  'lorry': 3,
-  'solo': 4
+// Map of allowed combinations with their corresponding input arrays
+const VEHICLE_COMBINATION_MAP = {
+  'bus_lorry': ['bus', 'lorry'],
+  'double%trailer_lorry': ['double%trailer', 'lorry'],
+  'lorry_solo': ['lorry', 'solo'],
+  'bus_double%trailer': ['bus', 'double%trailer'],
+  'bus_solo': ['bus', 'solo'],
+  'double%trailer_solo': ['double%trailer', 'solo'],
+  'bus_double%trailer_lorry': ['bus', 'double%trailer', 'lorry'],
+  'bus_lorry_solo': ['bus', 'lorry', 'solo'],
+  'double%trailer_lorry_solo': ['double%trailer', 'lorry', 'solo'],
+  'bus_double%trailer_solo': ['bus', 'double%trailer', 'solo']
 };
 
 function matchAndOrderVehicleSizes(vehicleSizeList: string[]): string {
   if (vehicleSizeList.length === 0) return '';
   if (vehicleSizeList.length === 1) return vehicleSizeList[0];
 
-  // Sort the vehicle sizes according to the defined order
-  const orderedSizes = [...vehicleSizeList].sort((a, b) => 
-    (VEHICLE_TYPE_ORDER[a as keyof typeof VEHICLE_TYPE_ORDER] || 999) - 
-    (VEHICLE_TYPE_ORDER[b as keyof typeof VEHICLE_TYPE_ORDER] || 999)
+  // Replace double_trailer with double%trailer in the input list
+  const normalizedList = vehicleSizeList.map(size => 
+    size === 'double_trailer' ? 'double%trailer' : size
   );
 
-  const combinedSize = orderedSizes.join('_');
-
-  // Check if the ordered combination is in the allowed list
-  if (!ALLOWED_VEHICLE_SIZE_COMBINATIONS.includes(combinedSize)) {
-    throw new Error(`Invalid vehicle size combination: ${combinedSize}. Allowed combinations are: ${ALLOWED_VEHICLE_SIZE_COMBINATIONS.join(', ')}`);
+  // Find matching combination
+  for (const [combination, requiredSizes] of Object.entries(VEHICLE_COMBINATION_MAP)) {
+    if (normalizedList.length === requiredSizes.length &&
+        normalizedList.every(size => requiredSizes.includes(size))) {
+      return combination;
+    }
   }
 
-  return combinedSize;
+  throw new Error(`Invalid vehicle size combination: ${normalizedList.join('_')}. Allowed combinations are: ${Object.keys(VEHICLE_COMBINATION_MAP).join(', ')}`);
 }
 
 export function mapFreightFormToTransEuRequest(formData: FreightFormData): TransEuFreightRequest {

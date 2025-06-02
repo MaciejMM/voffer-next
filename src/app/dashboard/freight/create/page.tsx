@@ -1,4 +1,6 @@
 import Form from "@/ui/freight/CreateFreightForm";
+import { FreightSkeleton } from "@/ui/freight/freight-table/freight-skeleton";
+import { Suspense } from "react";
 
 export default function Page() {
     return (
@@ -6,7 +8,9 @@ export default function Page() {
             <h3 className="text-2xl font-semibold tracking-tight">
                 Stwórz fracht
             </h3>
-            <Form />
+            <Suspense fallback={<FreightSkeleton />}>
+                <Form />
+            </Suspense>
         </div>
     );
 }

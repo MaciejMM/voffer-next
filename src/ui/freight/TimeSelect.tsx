@@ -30,8 +30,8 @@ const TimeSelect = ({
 
     let startTimeInput = state.inputs?.[`${props.locationKey}StartTime` as keyof State['inputs']];
     let endTimeInput = state.inputs?.[`${props.locationKey}EndTime` as keyof State['inputs']];
-    const [selectedStartTime, setSelectedStartTime] = useState(startTimeInput ?? "");
-    const [selectedEndTime, setSelectedEndTime] = useState(endTimeInput ?? "");
+    const [selectedStartTime, setSelectedStartTime] = useState(startTimeInput);
+    const [selectedEndTime, setSelectedEndTime] = useState(endTimeInput);
 
     const startTimes = generateTimeOptions();
     const [startHour, startMinute] = selectedStartTime ? (selectedStartTime as string).split(":").map(Number) : [0, 0];
@@ -40,7 +40,7 @@ const TimeSelect = ({
     return (
         <div className={cn("grid grid-cols-2 gap-4", className)}>
 
-            <Select onValueChange={setSelectedStartTime} name={`${props.locationKey}StartTime`} >
+            <Select onValueChange={setSelectedStartTime} value={selectedStartTime as string} name={`${props.locationKey}StartTime`} >
                 <SelectTrigger className="w-full"
                                aria-invalid={!!state.errors?.[`${props.locationKey}StartTime` as keyof State['errors']]}>
                     <SelectValue placeholder="Start" aria-invalid={true}/>
@@ -54,7 +54,7 @@ const TimeSelect = ({
                 </SelectContent>
             </Select>
 
-            <Select onValueChange={setSelectedEndTime} name={`${props.locationKey}EndTime`}>
+            <Select onValueChange={setSelectedEndTime} value={selectedEndTime as string} name={`${props.locationKey}EndTime`}>
                 <SelectTrigger className="w-full"
                                aria-invalid={!!state.errors?.[`${props.locationKey}EndTime` as keyof State['errors']]}>
                     <SelectValue placeholder="Koniec"/>

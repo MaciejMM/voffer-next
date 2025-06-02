@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Freight as FreightType } from '@/ui/freight/freight-table/columns';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditFreightPage() {
     const [freight, setFreight] = useState<Freight | null>(null);
@@ -63,7 +64,26 @@ export default function EditFreightPage() {
     }, [params.id]);
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Skeleton className="h-10" />
+                    <Skeleton className="h-10" />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Skeleton className="h-10" />
+                    <Skeleton className="h-10" />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Skeleton className="h-10" />
+                    <Skeleton className="h-10" />
+                </div>
+                <Skeleton className="h-32" />
+                <div className="flex justify-end">
+                    <Skeleton className="h-10 w-24" />
+                </div>
+            </div>
+        );
     }
 
     if (error) {
