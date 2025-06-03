@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const params = new URLSearchParams();
   params.append('grant_type', grant_type);
   params.append('code', code as string);
-  params.append('redirect_uri', "https%3A%2F%2Fvoffer-d18ce4ed1b53.herokuapp.com" as string);
+  params.append('redirect_uri', "https://voffer-next.vercel.app/dashboard" as string);
   params.append('client_id', client_id);
   params.append('client_secret', client_secret);
 
