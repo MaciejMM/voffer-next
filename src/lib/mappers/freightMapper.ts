@@ -95,7 +95,7 @@ export function mapFreightFormToTransEuRequest(formData: FreightFormData): Trans
     
   return {
     capacity,
-    publish: true,
+    publish: formData.isPublished,
     requirements: {
       is_ftl: formData.isFullTruck || false,
       required_truck_bodies: requiredTruckBodies,

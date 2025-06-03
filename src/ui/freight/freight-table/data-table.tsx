@@ -1,6 +1,7 @@
 "use client"
 import * as React from "react"
-
+import { useTransition } from "react"
+import { toast } from "sonner"
 import {
     ColumnDef,
     flexRender,
@@ -9,6 +10,7 @@ import {
     SortingState,
     useReactTable,
     getPaginationRowModel,
+    RowSelectionState,
 } from "@tanstack/react-table"
 import {
     Table,
@@ -27,6 +29,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { updateFreightPublishState } from "@/lib/actions/freight"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -38,7 +48,10 @@ export function DataTable<TData, TValue>({
     data,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
-    const [pageSize, setPageSize] = React.useState(10)
+    const [pageSize, setPageSize] = React.useState(5)
+    const [pageIndex, setPageIndex] = React.useState(0)
+    const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
+    const [isPending, startTransition] = useTransition()
 
     const table = useReactTable({
         data,
@@ -51,16 +64,20 @@ export function DataTable<TData, TValue>({
             sorting,
             pagination: {
                 pageSize,
-                pageIndex: 0,
+                pageIndex,
             },
+            rowSelection,
         },
+        enableRowSelection: true,
+        onRowSelectionChange: setRowSelection,
         onPaginationChange: (updater) => {
             if (typeof updater === 'function') {
                 const newState = updater({
-                    pageIndex: 0,
+                    pageIndex,
                     pageSize,
                 })
                 setPageSize(newState.pageSize)
+                setPageIndex(newState.pageIndex)
             }
         },
     })
@@ -72,6 +89,16 @@ export function DataTable<TData, TValue>({
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
+                                <TableHead className="w-[50px]">
+                                    <Checkbox
+                                        checked={
+                                            table.getIsAllPageRowsSelected() ||
+                                            (table.getIsSomePageRowsSelected() && "indeterminate")
+                                        }
+                                        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                                        aria-label="Select all"
+                                    />
+                                </TableHead>
                                 {headerGroup.headers.map((header) => {
                                     return (
                                         <TableHead key={header.id}>
@@ -102,21 +129,59 @@ export function DataTable<TData, TValue>({
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            table.getRowModel().rows.map((row) => {
+                                const isPublished = (row.original as any).isPublished;
+                                const transeuId = (row.original as any).transeuId;
+                                
+                                const handlePublishChange = (checked: boolean) => {
+                                    startTransition(async () => {
+                                        try {
+                                            await updateFreightPublishState((row.original as any).id, checked);
+                                            toast.success(checked ? "Freight marked for publishing" : "Freight unpublished");
+                                        } catch (error) {
+                                            toast.error("Failed to update publish state");
+                                            console.error(error);
+                                        }
+                                    });
+                                };
+
+                                return (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={row.getIsSelected() && "selected"}
+                                    >
+                                        <TableCell>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div>
+                                                            <Checkbox
+                                                                checked={isPublished}
+                                                                disabled={!!transeuId || isPending}
+                                                                onCheckedChange={handlePublishChange}
+                                                                aria-label="Publish to Trans.EU"
+                                                            />
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    {!!transeuId && (
+                                                        <TooltipContent>
+                                                            <p>This freight was published in Trans.EU</p>
+                                                        </TooltipContent>
+                                                    )}
+                                                </Tooltip>
+                                            </TooltipProvider>
                                         </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                );
+                            })
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell colSpan={columns.length + 1} className="h-24 text-center">
                                     No results.
                                 </TableCell>
                             </TableRow>
@@ -130,15 +195,16 @@ export function DataTable<TData, TValue>({
                     <Select
                         value={String(pageSize)}
                         onValueChange={(value) => {
-                            setPageSize(Number(value))
-                            table.setPageSize(Number(value))
+                            const newPageSize = Number(value)
+                            setPageSize(newPageSize)
+                            table.setPageSize(newPageSize)
                         }}
                     >
                         <SelectTrigger className="h-8 w-[70px]">
                             <SelectValue placeholder={pageSize} />
                         </SelectTrigger>
                         <SelectContent side="top">
-                            {[10, 25, 50].map((pageSize) => (
+                            {[5, 10, 25].map((pageSize) => (
                                 <SelectItem key={pageSize} value={String(pageSize)}>
                                     {pageSize}
                                 </SelectItem>
@@ -150,7 +216,10 @@ export function DataTable<TData, TValue>({
                     <Button
                         variant="outline"
                         className="hidden h-8 w-8 p-0 lg:flex"
-                        onClick={() => table.setPageIndex(0)}
+                        onClick={() => {
+                            setPageIndex(0)
+                            table.setPageIndex(0)
+                        }}
                         disabled={!table.getCanPreviousPage()}
                     >
                         <span className="sr-only">Go to first page</span>
@@ -159,20 +228,26 @@ export function DataTable<TData, TValue>({
                     <Button
                         variant="outline"
                         className="h-8 w-8 p-0"
-                        onClick={() => table.previousPage()}
+                        onClick={() => {
+                            setPageIndex(pageIndex - 1)
+                            table.previousPage()
+                        }}
                         disabled={!table.getCanPreviousPage()}
                     >
                         <span className="sr-only">Go to previous page</span>
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <div className="flex items-center justify-center text-sm font-medium">
-                        Page {table.getState().pagination.pageIndex + 1} of{" "}
+                        Page {pageIndex + 1} of{" "}
                         {table.getPageCount()}
                     </div>
                     <Button
                         variant="outline"
                         className="h-8 w-8 p-0"
-                        onClick={() => table.nextPage()}
+                        onClick={() => {
+                            setPageIndex(pageIndex + 1)
+                            table.nextPage()
+                        }}
                         disabled={!table.getCanNextPage()}
                     >
                         <span className="sr-only">Go to next page</span>
@@ -181,7 +256,11 @@ export function DataTable<TData, TValue>({
                     <Button
                         variant="outline"
                         className="hidden h-8 w-8 p-0 lg:flex"
-                        onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                        onClick={() => {
+                            const lastPage = table.getPageCount() - 1
+                            setPageIndex(lastPage)
+                            table.setPageIndex(lastPage)
+                        }}
                         disabled={!table.getCanNextPage()}
                     >
                         <span className="sr-only">Go to last page</span>

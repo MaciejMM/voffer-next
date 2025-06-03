@@ -21,6 +21,7 @@ export const freights = pgTable('freights', {
     rawFormData: jsonb('raw_form_data').notNull(),
     userId: text('user_id').notNull(),
     isActive: boolean('is_active').default(true),
+    isPublished: boolean('is_published').default(false),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 });

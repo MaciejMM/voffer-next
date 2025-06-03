@@ -90,4 +90,23 @@ export async function deleteFreight(id: string) {
 
     await db.delete(freights).where(eq(freights.id, id));
     return { success: true };
+}
+
+export async function updateFreightPublishState(id: string, isPublished: boolean) {
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const [freight] = await db.select().from(freights).where(eq(freights.id, id));
+    if (!freight || freight.userId !== user.id) throw new Error("Freight not found");
+
+    const [updatedFreight] = await db.update(freights)
+        .set({
+            isPublished,
+            updatedAt: new Date(),
+        })
+        .where(eq(freights.id, id))
+        .returning();
+
+    return updatedFreight;
 } 

@@ -50,6 +50,7 @@ export default function EditFreightPage() {
                     selectedCategories: freightData.rawFormData.selectedCategories || [],
                     selectedVehicles: freightData.rawFormData.selectedVehicles || [],
                     isFullTruck: freightData.rawFormData.isFullTruck || false,
+                    isPublished: freightData.rawFormData.isPublished || false,
                 };
 
                 setFreight(transformedFreight);

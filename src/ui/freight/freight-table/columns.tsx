@@ -40,6 +40,7 @@ export interface Freight {
         selectedVehicles: string[];
         isFullTruck: boolean;
         transEuResponse?: any;
+        isPublished: boolean;
     };
     userId: string;
     isActive: boolean | null;

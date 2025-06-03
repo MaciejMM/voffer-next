@@ -29,6 +29,7 @@ export interface FreightFormData {
     selectedCategories: string[];
     selectedVehicles: string[];
     isFullTruck: boolean;
+    isPublished: boolean;
 }
 
 const FormSchema = z.object({
@@ -101,6 +102,7 @@ const FormSchema = z.object({
     selectedCategories: z.array(z.string()).min(1, {message: 'Wybierz minimum jedną kategorię'}),
     selectedVehicles: z.array(z.string()).min(1, {message: 'Wybierz minimum jeden typ pojazdu'}).max(5, {message: 'Wybierz maksymalnie 5 typów pojazdów'}),
     isFullTruck: z.boolean(),
+    isPublished: z.boolean().default(false),
 });
 
 const CreateFreight = FormSchema;
@@ -141,6 +143,7 @@ export async function createFreightAction(prevState: State, formData: FormData):
         selectedCategories: formData.getAll('selectedCategories') as string[],
         selectedVehicles: formData.getAll('selectedVehicles') as string[],
         isFullTruck: formData.get('isFullTruck') !== 'false',
+        isPublished: formData.get('isPublished') === 'true',
     };
     console.log(rawFormData);
     // Get new access token
@@ -284,6 +287,7 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
         selectedCategories: formData.getAll('selectedCategories') as string[],
         selectedVehicles: formData.getAll('selectedVehicles') as string[],
         isFullTruck: formData.get('isFullTruck') !== 'false',
+        isPublished: formData.get('isPublished') === 'true',
     };
 
     // Get new access token

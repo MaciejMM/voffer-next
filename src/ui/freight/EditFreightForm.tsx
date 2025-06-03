@@ -11,6 +11,8 @@ import {updateFreight, State} from "@/lib/action";
 import {LoadingAttributes} from "@/ui/freight/LoadingAttributes";
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {AlertCircle, Terminal} from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export interface Freight {
     id?: string;
@@ -37,6 +39,7 @@ export interface Freight {
     selectedVehicles: string[];
     selectedCategories: string[];
     isFullTruck: boolean;
+    isPublished: boolean;
 }
 
 interface FormProps {
@@ -54,24 +57,25 @@ export default function Form({ freight }: FormProps) {
             weight: freight.weight || '',
             length: freight.length || '',
             volume: freight.volume || '',
-            description: freight.description ,
+            description: freight.description,
             loadingCountry: freight.loadingCountry,
             loadingPostalCode: freight.loadingPostalCode,
             loadingPlace: freight.loadingPlace,
             loadingStartTime: freight.loadingStartTime,
             loadingEndTime: freight.loadingEndTime,
-            loadingStartDate: freight.loadingStartDate ,
-            loadingEndDate: freight.loadingEndDate ,
-            unloadingCountry: freight.unloadingCountry ,
+            loadingStartDate: freight.loadingStartDate,
+            loadingEndDate: freight.loadingEndDate,
+            unloadingCountry: freight.unloadingCountry,
             unloadingPostalCode: freight.unloadingPostalCode,
-            unloadingPlace: freight.unloadingPlace ,
+            unloadingPlace: freight.unloadingPlace,
             unloadingStartTime: freight.unloadingStartTime!,
             unloadingEndTime: freight.unloadingEndTime!,
-            unloadingStartDate: freight.unloadingStartDate ,
-            unloadingEndDate: freight.unloadingEndDate ,
+            unloadingStartDate: freight.unloadingStartDate,
+            unloadingEndDate: freight.unloadingEndDate,
             selectedCategories: freight.selectedCategories,
             selectedVehicles: freight.selectedVehicles,
             isFullTruck: freight.isFullTruck,
+            isPublished: freight.isPublished,
         }
     };
 
@@ -98,6 +102,14 @@ export default function Form({ freight }: FormProps) {
                             defaultValue={freight.description}
                         />
                         <ExchangeSelector/>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="isPublished" 
+                                name="isPublished" 
+                                defaultChecked={freight.isPublished} 
+                            />
+                            <Label htmlFor="isPublished">Publish to Trans.EU</Label>
+                        </div>
                     </CardContent>
                 </Card>
                 {state?.isError ? (
