@@ -35,15 +35,15 @@ interface TransEuFreightRequest {
 // Map of allowed combinations with their corresponding input arrays
 const VEHICLE_COMBINATION_MAP = {
   'bus_lorry': ['bus', 'lorry'],
-  'double%trailer_lorry': ['double%trailer', 'lorry'],
+  'double_trailer_lorry': ['double%trailer', 'lorry'],
   'lorry_solo': ['lorry', 'solo'],
-  'bus_double%trailer': ['bus', 'double%trailer'],
+  'bus_double_trailer': ['bus', 'double%trailer'],
   'bus_solo': ['bus', 'solo'],
-  'double%trailer_solo': ['double%trailer', 'solo'],
-  'bus_double%trailer_lorry': ['bus', 'double%trailer', 'lorry'],
+  'double_trailer_solo': ['double%trailer', 'solo'],
+  'bus_double_trailer_lorry': ['bus', 'double%trailer', 'lorry'],
   'bus_lorry_solo': ['bus', 'lorry', 'solo'],
-  'double%trailer_lorry_solo': ['double%trailer', 'lorry', 'solo'],
-  'bus_double%trailer_solo': ['bus', 'double%trailer', 'solo']
+  'double_trailer_lorry_solo': ['double%trailer', 'lorry', 'solo'],
+  'bus_double_trailer_solo': ['bus', 'double%trailer', 'solo']
 };
 
 function matchAndOrderVehicleSizes(vehicleSizeList: string[]): string {
