@@ -70,6 +70,7 @@ export function DataTable<TData, TValue>({
         },
         enableRowSelection: true,
         onRowSelectionChange: setRowSelection,
+        enableMultiRowSelection: true,
         onPaginationChange: (updater) => {
             if (typeof updater === 'function') {
                 const newState = updater({
@@ -92,10 +93,15 @@ export function DataTable<TData, TValue>({
                                 <TableHead className="w-[50px]">
                                     <Checkbox
                                         checked={
-                                            table.getIsAllPageRowsSelected() ||
-                                            (table.getIsSomePageRowsSelected() && "indeterminate")
+                                            table.getRowModel().rows.filter(row => !(row.original as any).isPublished).length > 0 &&
+                                            table.getRowModel().rows.filter(row => !(row.original as any).isPublished)
+                                                .every(row => row.getIsSelected())
                                         }
-                                        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                                        onCheckedChange={(value) => {
+                                            table.getRowModel().rows
+                                                .filter(row => !(row.original as any).isPublished)
+                                                .forEach(row => row.toggleSelected(!!value))
+                                        }}
                                         aria-label="Select all"
                                     />
                                 </TableHead>
@@ -129,7 +135,8 @@ export function DataTable<TData, TValue>({
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => {
+                            table.getRowModel().rows
+                            .map((row) => {
                                 const isPublished = (row.original as any).isPublished;
                                 const transeuId = (row.original as any).transeuId;
                                 
@@ -149,6 +156,7 @@ export function DataTable<TData, TValue>({
                                     <TableRow
                                         key={row.id}
                                         data-state={row.getIsSelected() && "selected"}
+                                        className={isPublished === true ? "bg-muted/50" : ""}
                                     >
                                         <TableCell>
                                             <TooltipProvider>
@@ -156,14 +164,14 @@ export function DataTable<TData, TValue>({
                                                     <TooltipTrigger asChild>
                                                         <div>
                                                             <Checkbox
-                                                                checked={isPublished}
-                                                                disabled={!!transeuId || isPending}
-                                                                onCheckedChange={handlePublishChange}
+                                                                checked={row.getIsSelected()}
+                                                                disabled={isPublished}
+                                                                onCheckedChange={row.getToggleSelectedHandler()}
                                                                 aria-label="Publish to Trans.EU"
                                                             />
                                                         </div>
                                                     </TooltipTrigger>
-                                                    {!!transeuId && (
+                                                    {isPublished && (
                                                         <TooltipContent>
                                                             <p>This freight was published in Trans.EU</p>
                                                         </TooltipContent>

@@ -3,7 +3,7 @@ import {z} from 'zod';
 import { cookies } from 'next/headers';
 import { getAccessToken } from './tokenStore';
 import { mapFreightFormToTransEuRequest } from './mappers/freightMapper';
-import { createFreight } from "@/lib/actions/freight";
+import { createFreight, getFreightById } from "@/lib/actions/freight";
 
 export interface FreightFormData {
     weight: string;
@@ -306,7 +306,6 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
     }
     const tokenData = await getAccessToken(oldTokenId.value);
 
-
     if (!tokenData) {
         return {
             isError: true,
@@ -333,23 +332,65 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
         };
     }
 
-
     const transEuRequest = mapFreightFormToTransEuRequest(rawFormData);
     console.log(transEuRequest);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/v1/freight/${rawFormData.id}`,
-        {
-            headers: {
-                "Content-Type": "application/json",
-            },
-            method: 'PUT',
-            body: JSON.stringify(validatedData.data),
-        });
-
-    if (!res.ok) {
+    
+    //by rawFormData.id get the transeuId from the database
+    const freight = await getFreightById(rawFormData.id);
+    if (!freight) {
         return {
             isError: true,
             isSuccess: false,
-            message: 'Wystąpił błąd podczas aktualizacji frachtu',
+            message: 'Fracht nie został znaleziony',
+            success: false,
+            inputs: rawFormData,
+            errors: {},
+        };
+    }
+    console.log(freight.transeuId);
+    // First update in Trans.eu platform
+    const transEuRes = await fetch(`https://api.platform.trans.eu/ext/freights-api/v1/freight-exchange/${freight.transeuId}`, {
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${tokenData}`,
+            "Api-key": process.env.TRANS_API_KEY || '',
+        },
+        method: 'PUT',
+        body: JSON.stringify(transEuRequest),
+    });
+
+    if (!transEuRes.ok) {
+        const errorData = await transEuRes.json();
+        console.log(errorData);
+
+
+        let errorMessage = 'Wystąpił błąd podczas tworzenia frachtu w Trans.eu';
+
+        if(errorData.detail){
+            errorMessage = errorData.detail;
+        }
+
+        if (errorData.validation_messages) {
+            // Extract validation messages
+            const validationMessages = Object.entries(errorData.validation_messages)
+                .map(([key, value]: [string, any]) => {
+                    if (typeof value === 'object' && value.validation_error) {
+                        return value.validation_error;
+                    }
+                    return `${key}: ${JSON.stringify(value)}`;
+                })
+                .join(', ');
+
+            if (validationMessages) {
+                errorMessage = `Błąd walidacji: ${validationMessages}`;
+            }
+        }
+        
+        return {
+            isError: true,
+            isSuccess: false,
+            message: errorMessage,
             success: false,
             inputs: rawFormData,
             errors: {},
