@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { freights } from "@/lib/db/schema";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { Freight } from "@/ui/freight/freight-table/columns";
 import {  getTransEuFreightStatuses } from '../transEuApi';
 
@@ -43,8 +43,8 @@ export async function getFreights(): Promise<Freight[]> {
     if (!user?.id) {
         throw new Error("Unauthorized");
     }
-
-    const result = await db.select().from(freights).where(eq(freights.userId, user.id));
+//sort results by createdAt descending
+    const result = (await db.select().from(freights).where(eq(freights.userId, user.id)).orderBy(desc(freights.createdAt)));
     
     // Get all transeuIds from the result
     const transeuIds = result
@@ -74,7 +74,7 @@ export async function getFreights(): Promise<Freight[]> {
         };
         
         return freightData;
-    });
+    }).sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
 }
 
 export async function getFreightById(id: string): Promise<Freight> {
