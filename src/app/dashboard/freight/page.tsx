@@ -26,7 +26,6 @@ export default function FreightPage() {
                     Twoje Frachty
                 </h3>
                 <CreateFreightLinkButton />
-
                 <Suspense fallback={<FreightSkeleton />}>
                     <FreightData />
                 </Suspense>

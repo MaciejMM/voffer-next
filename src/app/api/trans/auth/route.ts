@@ -87,7 +87,6 @@ export async function PUT() {
       return NextResponse.json({ error: 'Missing Trans.eu API credentials in environment variables' }, { status: 500 });
     }
 
-
     const response = await fetch('https://api.platform.trans.eu/ext/auth-api/accounts/token', {
       method: 'POST',
       headers: {
