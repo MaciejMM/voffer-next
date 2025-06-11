@@ -1,6 +1,4 @@
 'use client';
-
-import * as React from "react"
 import {GalleryVerticalEnd} from "lucide-react"
 import {LogoutLink} from "@kinde-oss/kinde-auth-nextjs/components";
 
@@ -108,11 +106,7 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
                     </SidebarMenu>
                     <div className="pt-16">
                         <Button className="cursor-pointer w-full" asChild>
-                            <Link href="/api/auth/logout" onClick={async () => {
-                                await fetch('/api/trans/logout');
-                            }}>
-                                Wyloguj
-                            </Link>
+                            <LogoutLink>Wyloguj</LogoutLink>
                         </Button>
                     </div>
 

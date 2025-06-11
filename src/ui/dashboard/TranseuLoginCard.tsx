@@ -9,6 +9,12 @@ import TranseuStatusIndicator from "@/ui/dashboard/TranseuStatusIndicator";
 export function TranseuLoginCard() {
     const [isPending, startTransition] = useTransition();
 
+    const handleLogin = () => {
+        startTransition(() => {
+            handleTransEuLogin();
+        });
+    };
+
     return (
         <Card className="w-[350px]">
             <CardHeader>
@@ -19,7 +25,7 @@ export function TranseuLoginCard() {
             </CardHeader>
             <CardContent>
                 <Button 
-                    onClick={() => startTransition(() => handleTransEuLogin())}
+                    onClick={handleLogin}
                     disabled={isPending}
                 >
                     {isPending ? 'Connecting...' : 'Zaloguj'}
@@ -29,5 +35,5 @@ export function TranseuLoginCard() {
                 <TranseuStatusIndicator />
             </CardFooter>
         </Card>
-    );
+    )
 }

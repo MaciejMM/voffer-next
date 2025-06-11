@@ -1,18 +1,20 @@
 'use client';
-import {useActionState} from 'react';
-import {Card, CardContent} from "@/components/ui/card";
-import {TruckLoadRadioSelector} from "@/ui/freight/TruckLoadRadioSelector";
-import {Textarea} from "@/components/ui/textarea";
-import {VehicleSelector} from "@/ui/freight/VehicleSelector";
-import {ExchangeSelector} from "@/ui/freight/ExchangeSelector";
-import {EditFreightButton} from "@/ui/freight/EditFreightButton";
-import {Key, LocationCard} from "@/ui/freight/LocationCard";
-import {updateFreight, State} from "@/lib/action";
-import {LoadingAttributes} from "@/ui/freight/LoadingAttributes";
-import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
-import {AlertCircle, Terminal} from "lucide-react";
+
+import { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { TruckLoadRadioSelector } from "@/ui/freight/TruckLoadRadioSelector";
+import { Textarea } from "@/components/ui/textarea";
+import { VehicleSelector } from "@/ui/freight/VehicleSelector";
+import { ExchangeSelector } from "@/ui/freight/ExchangeSelector";
+import { EditFreightButton } from "@/ui/freight/EditFreightButton";
+import { Key, LocationCard } from "@/ui/freight/LocationCard";
+import { updateFreight, State } from "@/lib/action";
+import { LoadingAttributes } from "@/ui/freight/LoadingAttributes";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Terminal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useRouter } from 'next/navigation';
 
 export interface Freight {
     id?: string;
@@ -47,7 +49,8 @@ interface FormProps {
 }
 
 export default function Form({ freight }: FormProps) {
-    const initialState: State = {
+    const router = useRouter();
+    const [state, setState] = useState<State>({
         message: "",
         success: false,
         errors: {},
@@ -77,12 +80,30 @@ export default function Form({ freight }: FormProps) {
             isFullTruck: freight.isFullTruck,
             isPublished: freight.isPublished,
         }
+    });
+    const [isPending, setIsPending] = useState(false);
+
+    const handleSubmit = async (formData: FormData) => {
+        setIsPending(true);
+        try {
+            const result = await updateFreight(state, formData);
+            setState(result);
+            if (result.success) {
+                router.push('/dashboard/freight');
+            }
+        } catch (error) {
+            setState({
+                ...state,
+                isError: true,
+                message: error instanceof Error ? error.message : 'An unexpected error occurred'
+            });
+        } finally {
+            setIsPending(false);
+        }
     };
 
-    const [state, action, isPending] = useActionState(updateFreight, initialState);
-
     return (
-        <form action={action} className="flex flex-col gap-4 w-full">
+        <form action={handleSubmit} className="flex flex-col gap-4 w-full">
             <input type="hidden" name="id" value={freight.id || ''} />
             <div className="flex flex-row gap-4">
                 <LocationCard locationKey={Key.Loading} state={state} />
@@ -124,9 +145,9 @@ export default function Form({ freight }: FormProps) {
                 {state?.isSuccess ? (
                     <Alert variant="default" className="text-green-800">
                         <Terminal className="h-4 w-4" />
-                        <AlertTitle>Heads up!</AlertTitle>
+                        <AlertTitle>Success</AlertTitle>
                         <AlertDescription>
-                            You can add components and dependencies to your app using the cli.
+                            Freight updated successfully
                         </AlertDescription>
                     </Alert>
                 ) : null}

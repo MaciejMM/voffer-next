@@ -1,6 +1,5 @@
 'use client';
 
-import { useActionState } from 'react';
 import { createUser, UserState } from '@/lib/actions/admin';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,7 +26,8 @@ const initialState: UserState = {
 
 export default function CreateUserPage() {
     const router = useRouter();
-    const [state, action, isPending] = useActionState(createUser, initialState);
+    const [state, setState] = useState<UserState>(initialState);
+    const [isPending, setIsPending] = useState(false);
     const [selectedTitle, setSelectedTitle] = useState('');
     const [selectedRole, setSelectedRole] = useState('USER');
 
@@ -46,6 +46,23 @@ export default function CreateUserPage() {
         }
     }, [state.success, router]);
 
+    const handleSubmit = async (formData: FormData) => {
+        setIsPending(true);
+        try {
+            const result = await createUser(state, formData);
+            setState(result);
+        } catch (error) {
+            setState({
+                ...state,
+                success: false,
+                error: 'An unexpected error occurred',
+                message: 'Failed to create user'
+            });
+        } finally {
+            setIsPending(false);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-8">
             <h3 className="text-2xl font-semibold tracking-tight">
@@ -56,7 +73,7 @@ export default function CreateUserPage() {
                     <CardTitle>User Details</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form action={action} className="flex flex-col gap-4">
+                    <form action={handleSubmit} className="flex flex-col gap-4">
                         <div className="space-y-2">
                             <Label>Title</Label>
                             <div className="flex gap-4" role="radiogroup">
