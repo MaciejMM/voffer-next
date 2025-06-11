@@ -5,11 +5,17 @@ import { freights } from "@/lib/db/schema";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { eq } from "drizzle-orm";
 import { Freight } from "@/ui/freight/freight-table/columns";
+import {  getTransEuFreightStatuses } from '../transEuApi';
 
 interface TransEuResponse {
     id: string;
     status: string;
     // Add other fields as needed
+}
+
+interface TransEuStatus {
+    id: string;
+    status: string;
 }
 
 export async function createFreight(rawFormData: any, transEuResponse: TransEuResponse | null = null) {
@@ -39,21 +45,63 @@ export async function getFreights(): Promise<Freight[]> {
     }
 
     const result = await db.select().from(freights).where(eq(freights.userId, user.id));
-    return result.map(freight => ({
-        ...freight,
-        rawFormData: freight.rawFormData as Freight['rawFormData']
-    }));
+    
+    // Get all transeuIds from the result
+    const transeuIds = result
+        .filter(freight => freight.transeuId)
+        .map(freight => freight.transeuId as string);
+
+    // Fetch Trans.eu statuses
+    const transEuStatuses = await getTransEuFreightStatuses(transeuIds);
+    // Create a map of transeuId to status for quick lookup
+    const statusMap = new Map(
+        transEuStatuses.map((status: TransEuStatus) => [status.id, status.status])
+    );
+
+    // Map the results and include Trans.eu status
+    return result.map(freight => {
+        const transEuStatus = freight.transeuId ? statusMap.get(freight.transeuId) ?? null : null;
+        
+        const freightData: Freight = {
+            id: freight.id,
+            transeuId: freight.transeuId,
+            transEuStatus,
+            rawFormData: freight.rawFormData as Freight['rawFormData'],
+            userId: freight.userId,
+            isActive: freight.isActive,
+            createdAt: freight.createdAt,
+            updatedAt: freight.updatedAt
+        };
+        
+        return freightData;
+    });
 }
 
-export async function getFreightById(id: string) {
+export async function getFreightById(id: string): Promise<Freight> {
     const { getUser } = getKindeServerSession();
     const user = await getUser();
-    if (!user) throw new Error("Unauthorized");
 
-    const [freight] = await db.select().from(freights).where(eq(freights.id, id));
+    if (!user?.id) {
+        throw new Error("Unauthorized");
+    }
+
+    const freight = await db.query.freights.findFirst({
+        where: eq(freights.id, id),
+    });
+
     if (!freight || freight.userId !== user.id) throw new Error("Freight not found");
 
-    return freight;
+    // Get Trans.eu status if transeuId exists
+    let transEuStatus = null;
+    if (freight.transeuId) {
+        const statuses = await getTransEuFreightStatuses([freight.transeuId]);
+        transEuStatus = statuses[0]?.status ?? null;
+    }
+
+    return {
+        ...freight,
+        transEuStatus
+    } as Freight;
 }
 
 export async function updateFreight(id: string, rawFormData: any, transEuResponse: TransEuResponse | null = null) {

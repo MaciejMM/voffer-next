@@ -24,8 +24,6 @@ export default function TranseuStatusIndicator() {
             }
 
             const data = await response.json();
-            console.log(data);
-
         };
 
         checkToken();

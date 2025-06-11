@@ -9,12 +9,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CheckCircle2, MoreHorizontal, XCircle } from "lucide-react"
+import {  MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export interface Freight {
     id: string;
     transeuId: string | null;
+    transEuStatus: string | null;
     rawFormData: {
         loadingCountry:string;
         loadingPostalCode:string;
@@ -166,17 +167,16 @@ export const columns: ColumnDef<Freight>[] = [
     },
     {
         accessorKey: "transeuId",
-        header: "TRANS.EU",
+        header: "Trans.eu ID",
         cell: ({ row }) => {
+            const transeuId = row.getValue("transeuId") as string | null ?? 'brak ID';
+            const status = row.original.transEuStatus as string | null ?? 'brak statusu';
             return (
-                <div className="flex flex-col justify-center">
-                    <span className="text-sm text-gray-900">
-                        {row.original.transeuId ? (
-                            <CheckCircle2 className="text-green-500" size={16} />
-                        ) : (
-                            <XCircle className="text-red-500" size={16} />
-                        )}
-                    </span>
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                        <span>{transeuId}</span>
+                        <span>{status}</span>
+                    </div>
                 </div>
             );
         },

@@ -13,10 +13,22 @@ import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {AlertCircle, Terminal} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Form() {
     const initialState: State = {message: "", success: false, isError: false, isSuccess: false, inputs: {}, errors: {}};
     const [state, action, isPending] = useActionState(createFreightAction, initialState);
+    const [isPublished, setIsPublished] = useState(state.inputs.isPublished ?? false);
+
+    const handleCheckedChange = (checked: boolean | "indeterminate") => {
+        setIsPublished(checked === true);
+    };
 
     return (
         <form action={action} className="flex flex-col gap-4 w-full">
@@ -33,7 +45,28 @@ export default function Form() {
                         <Textarea aria-invalid={!!state.errors?.description} state={state} name="description" placeholder="Dodaj komentarz" className=""/>
                         <ExchangeSelector/>
                         <div className="flex items-center space-x-2">
-                            <Checkbox id="isPublished" name="isPublished" defaultChecked={false} />
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div>
+                                            <Checkbox 
+                                                id="isPublished" 
+                                                name="isPublished" 
+                                                value="true"
+                                                checked={isPublished}
+                                                onCheckedChange={handleCheckedChange}
+                                                disabled={isPublished}
+                                                aria-label="Publish to Trans.EU"
+                                            />
+                                        </div>
+                                    </TooltipTrigger>
+                                    {isPublished && (
+                                        <TooltipContent>
+                                            <p>This freight was published in Trans.EU</p>
+                                        </TooltipContent>
+                                    )}
+                                </Tooltip>
+                            </TooltipProvider>
                             <Label htmlFor="isPublished">Publish to Trans.EU</Label>
                         </div>
                     </CardContent>
@@ -61,9 +94,12 @@ export default function Form() {
                             </Alert> : <></>
 
                     }
+
+
                 </div>
             </div>
             <CreateFreightButton isPending={isPending} className={"self-start"}/>
+
         </form>
     )
 }

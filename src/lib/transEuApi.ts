@@ -1,5 +1,7 @@
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 import {  validateFreightData } from './transEuService';
+import { getAccessToken } from './tokenStore';
+import { cookies } from 'next/headers';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -36,14 +38,17 @@ export const createFreight = async (formData: FormData) => {
         throw new Error('Invalid form data');
     }
 
-    const token = sessionStorage.getItem('trans_access_token');
-    if (!token) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('trans_token_id') ?? null;
+    const tokenData = await getAccessToken(token?.value ?? '');
+
+    if (!tokenData) {
         throw new Error('No token found');
     }
 
     const response = await fetch(`${BASE_URL}/api/v1/freight`, {
         headers: {
-            "Transeu-Access-Token": `Bearer ${token}`,
+            "Transeu-Access-Token": `Bearer ${tokenData}`,
             "Content-Type": "application/json",
         },
         method: 'POST',
@@ -90,10 +95,17 @@ export const updateFreight = async (formData: FormData) => {
         throw new Error('Invalid form data');
     }
 
-    const token = sessionStorage.getItem('trans_access_token');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('trans_token_id') ?? null;
+    const tokenData = await getAccessToken(token?.value ?? '');
+
+    if (!tokenData) {
+        throw new Error('No token found');
+    }
+
     const response = await fetch(`${BASE_URL}/api/v1/freight/${rawFormData.id}`, {
         headers: {
-            "Transeu-Access-Token": `Bearer ${token}`,
+            "Transeu-Access-Token": `Bearer ${tokenData}`,
             "Content-Type": "application/json",
         },
         method: 'PUT',
@@ -121,4 +133,57 @@ export const getFreights = async () => {
     }
 
     return response.json();
+};
+
+interface TransEuFreightResponse {
+    id: number;
+    status: string;
+    publication?: {
+        status: string;
+    };
+    reference_number: string;
+}
+
+export const getTransEuFreightStatuses = async (transeuIds: string[]) => {
+    if (!transeuIds.length) return [];
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get('trans_token_id') ?? null;
+    const apiKey = process.env.TRANS_API_KEY;
+    const tokenData = await getAccessToken(token?.value ?? '');
+
+    if (!tokenData || !apiKey) {
+        console.error('Missing Trans.eu credentials');
+        return [];
+    }
+
+    try {
+        const response = await fetch('https://api.platform.trans.eu/ext/freights-api/v1/freights', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${tokenData}`,
+                'Api-key': apiKey
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch Trans.eu freight statuses');
+        }
+
+        const data = await response.json() as TransEuFreightResponse[];
+        
+        return data
+            .filter((freight: TransEuFreightResponse) => 
+                transeuIds.includes(freight.id.toString()))
+            .map((freight: TransEuFreightResponse) => ({
+                id: freight.id.toString(),
+                status: freight.publication?.status === 'active' ? 'active' : freight.status,
+                referenceNumber: freight.reference_number,
+                publicationStatus: freight.publication?.status
+            }));
+    } catch (error) {
+        console.error('Error fetching Trans.eu freight statuses:', error);
+        return [];
+    }
 };
