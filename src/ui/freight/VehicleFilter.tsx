@@ -4,7 +4,7 @@ import {Separator} from "@/components/ui/separator";
 import {CardTitle} from "@/components/ui/card";
 import * as React from "react";
 import {State} from "@/lib/action";
-import {useState, useEffect} from "react";
+import {useState} from "react";
 
 const vehicleData = [
     {type: "curtainsider", any_size: true, bus: true, lorry: true, double_trailer: true, solo: true},

@@ -9,8 +9,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {  MoreHorizontal } from "lucide-react"
+import {  MoreHorizontal, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import { toast } from "sonner"
 
 export interface Freight {
     id: string;
@@ -184,6 +186,33 @@ export const columns: ColumnDef<Freight>[] = [
     {
         id: "actions",
         cell: ({ row }) => {
+            const [loadingId, setLoadingId] = useState<string | null>(null);
+
+            const handleRefreshFreight = async (freightId: string) => {
+                setLoadingId(freightId);
+                let message = "";
+                try {
+                    const res = await fetch(`/api/freight/${freightId}/refresh_publication`, {
+                        method: "PUT",
+                        credentials: "include"
+                    });
+                    const result = await res.json();
+                    if (!res.ok){
+                        // Use the error message from the backend if available
+                        message = "Failed to update freight. " + (result.error || res.statusText);
+                        toast.error(message);
+                    } else {
+                        message = "Freight has been successfully updated.";
+                        toast.success(message);
+                    }
+                } catch (e:any) {
+                    message = "Failed to update freight. " + e.message;
+                    toast.error(message);
+                } finally {
+                    setLoadingId(null);
+                }
+            };
+
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -194,11 +223,21 @@ export const columns: ColumnDef<Freight>[] = [
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+                        {row.original.transeuId && (
                         <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(row.original.id)}
+                            onClick={() => handleRefreshFreight(row.original.transeuId!)}
+                            disabled={loadingId === row.original.transeuId}
                         >
-                            Copy ID
-                        </DropdownMenuItem>
+                            {loadingId === row.original.transeuId ? (
+                                <>
+                                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                                    Refreshing...
+                                </>
+                            ) : (
+                                "Odśwież"
+                                )}
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => {
                             window.location.href = `/dashboard/freight/${row.original.id}/edit`

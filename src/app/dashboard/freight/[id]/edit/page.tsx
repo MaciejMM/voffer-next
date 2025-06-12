@@ -9,7 +9,13 @@ import { AlertCircle } from 'lucide-react';
 
 function EditFreightSkeleton() {
     return (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-4 w-full">
+
+            <div className="flex flex-row gap-4">
+                <Skeleton className="h-10" />
+                <Skeleton className="h-10" />
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
                 <Skeleton className="h-10" />
                 <Skeleton className="h-10" />
@@ -33,7 +39,7 @@ function EditFreightSkeleton() {
 async function EditFreightContent({ id }: { id: string }) {
     try {
         const freightData = await getFreightById(id) as FreightType;
-        
+
         if (!freightData) {
             return (
                 <Alert variant="destructive">
@@ -90,7 +96,7 @@ async function EditFreightContent({ id }: { id: string }) {
 export default async function EditFreightPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     const id = params.id;
-    
+
     return (
         <div className="flex flex-col gap-8">
             <h3 className="text-2xl font-semibold tracking-tight">

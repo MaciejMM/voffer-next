@@ -22,6 +22,7 @@ export const LoadingAttributes = ({state}: { state: State }) => {
                                 name={attribute.name}
                                 type="number"
                                 min={attribute.min}
+                                step={0.1}
                                 id={attribute.name}
                                 placeholder={attribute.label}
                                 aria-describedby={`${attribute.name}-error`}/>

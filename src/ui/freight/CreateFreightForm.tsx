@@ -1,5 +1,5 @@
 'use client';
-import {useActionState} from 'react';
+import {useActionState, useEffect} from 'react';
 import {Card, CardContent} from "@/components/ui/card";
 import {TruckLoadRadioSelector} from "@/ui/freight/TruckLoadRadioSelector";
 import {Textarea} from "@/components/ui/textarea";
@@ -22,16 +22,34 @@ import {
 } from "@/components/ui/tooltip";
 
 export default function Form() {
-    const initialState: State = {message: "", success: false, isError: false, isSuccess: false, inputs: {}, errors: {}};
+    const initialState: State = {
+        message: "", 
+        success: false, 
+        isError: false, 
+        isSuccess: false, 
+        inputs: { isPublished: true }, 
+        errors: {}
+    };
     const [state, action, isPending] = useActionState(createFreightAction, initialState);
-    const [isPublished, setIsPublished] = useState(state.inputs.isPublished ?? false);
-
+    const [isPublished, setIsPublished] = useState<boolean>(state.inputs?.isPublished ?? true);
+    
+    useEffect(() => {
+        if (state.inputs?.isPublished !== undefined) {
+            setIsPublished(state.inputs.isPublished);
+        }
+    }, [state.inputs?.isPublished]);
+    
     const handleCheckedChange = (checked: boolean | "indeterminate") => {
         setIsPublished(checked === true);
     };
 
+    const handleSubmit = async (formData: FormData) => {
+        formData.set('isPublished', isPublished ? 'true' : 'false');
+        return action(formData);
+    };
+
     return (
-        <form action={action} className="flex flex-col gap-4 w-full">
+        <form action={handleSubmit} className="flex flex-col gap-4 w-full">
             <div className="flex flex-row gap-4 ">
                 <LocationCard locationKey={Key.Loading} state={state} />
                 <LocationCard locationKey={Key.Unloading} state={state} />
@@ -51,11 +69,11 @@ export default function Form() {
                                         <div>
                                             <Checkbox 
                                                 id="isPublished" 
-                                                name="isPublished" 
+                                                name="isPublished"
                                                 value="true"
                                                 checked={isPublished}
                                                 onCheckedChange={handleCheckedChange}
-                                                disabled={isPublished}
+                                                defaultChecked={isPublished}
                                                 aria-label="Publish to Trans.EU"
                                             />
                                         </div>
@@ -92,9 +110,7 @@ export default function Form() {
                                     Oferta została utworzona pomyślnie w Trans.eu
                                 </AlertDescription>
                             </Alert> : <></>
-
                     }
-
 
                 </div>
             </div>

@@ -60,10 +60,8 @@ export const SearchLocationDialog = ({
         setIsLoading(true);
         const fetchData = async () => {
             try {
-                const tokenRaw = await getAccessTokenRaw();
                 const results: SearchResult[] = await autoCompleteCountrySearch(
                     input,
-                    tokenRaw as string,
                     props.locationKey === "loading" ? loadingCountryCode : unloadingCountryCode
                 );
                 console.log('Search results:', results);

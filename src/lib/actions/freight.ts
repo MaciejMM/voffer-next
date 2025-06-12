@@ -158,3 +158,22 @@ export async function updateFreightPublishState(id: string, isPublished: boolean
 
     return updatedFreight;
 } 
+
+//update freight updatedAt
+export async function updateFreightUpdatedAt(id: string) {
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const [freight] = await db.select().from(freights).where(eq(freights.id, id));
+    if (!freight || freight.userId !== user.id) throw new Error("Freight not found");
+
+    const [updatedFreight] = await db.update(freights)      
+        .set({
+            updatedAt: new Date(),
+        })
+        .where(eq(freights.id, id))
+        .returning();
+
+    return updatedFreight;
+}
