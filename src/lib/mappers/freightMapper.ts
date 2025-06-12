@@ -107,9 +107,9 @@ export function mapFreightFormToTransEuRequest(formData: FreightFormData): Trans
         spot_order: 1,
         place: {
           address: {
-            country: 'AF',
-            postal_code: '12345',
-            locality: 'Kabul',
+            country: formData.loadingCountry,
+            postal_code: formData.loadingPostalCode,
+            locality: formData.loadingPlace,
           },
         },
         operations: [
@@ -127,9 +127,9 @@ export function mapFreightFormToTransEuRequest(formData: FreightFormData): Trans
         spot_order: 2,
         place: {
           address: {
-            country: 'AF',
-            postal_code: '12345',
-            locality: 'Kabul',
+            country: formData.unloadingCountry,
+            postal_code: formData.unloadingPostalCode,
+            locality: formData.unloadingPlace,
           },
         },
         operations: [
