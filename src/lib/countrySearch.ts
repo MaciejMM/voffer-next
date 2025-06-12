@@ -11,7 +11,7 @@ export const autoCompleteCountrySearch = async (query: string, country: string):
         country: country === "" ? undefined : country,
     };
 
-    const res = await fetch("/api/location/search", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/location/search`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -58,7 +58,7 @@ const ActionsCell = ({ row }: { row: any }) => {
         setLoadingId(freightId);
         let message = "";
         try {
-            const res = await fetch(`/api/freight/${freightId}/refresh_publication`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/freight/${freightId}/refresh_publication`, {
                 method: "PUT",
                 credentials: "include"
             });
