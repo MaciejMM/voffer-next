@@ -35,7 +35,42 @@ export const LocationCard = ({
     const country = `${props.locationKey}Country` as keyof State['errors'];
     const [open, setOpen] = React.useState(false);
 
+    const [postalCode, setPostalCode] = React.useState<string>(state.inputs?.[postalCodeKey as keyof typeof state.inputs] as string || '');
+    const [placeValue, setPlaceValue] = React.useState<string>(state.inputs?.[place as keyof typeof state.inputs] as string || '');
+    const [countryValue, setCountryValue] = React.useState<string>(state.inputs?.[`${props.locationKey}Country` as keyof typeof state.inputs] as string || '');
 
+    React.useEffect(() => {
+        setPostalCode(state.inputs?.[postalCodeKey as keyof typeof state.inputs] as string || '');
+        setPlaceValue(state.inputs?.[place as keyof typeof state.inputs] as string || '');
+        setCountryValue(state.inputs?.[`${props.locationKey}Country` as keyof typeof state.inputs] as string || '');
+    }, [state.inputs, postalCodeKey, place, props.locationKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setPostalCode(value);
+        if (state.inputs) {
+            (state.inputs as any)[postalCodeKey] = value;
+        }
+    };
+
+    const handlePlaceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setPlaceValue(value);
+        if (state.inputs) {
+            (state.inputs as any)[place] = value;
+        }
+    };
+
+    const handleLocationSelect = (postalCode: string, city: string, countryCode: string) => {
+        setPostalCode(postalCode);
+        setPlaceValue(city);
+        setCountryValue(countryCode);
+        if (state.inputs) {
+            (state.inputs as any)[postalCodeKey] = postalCode;
+            (state.inputs as any)[place] = city;
+            (state.inputs as any)[`${props.locationKey}Country`] = countryCode;
+        }
+    };
 
     const errorList = [
         {
@@ -66,7 +101,6 @@ export const LocationCard = ({
             key: `${props.locationKey}EndDate` as keyof State['errors'],
             id: `${props.locationKey}EndDate-error`
         }
-
     ]
 
     // @ts-ignore
@@ -79,23 +113,24 @@ export const LocationCard = ({
                 <div className="grid grid-cols-9 grid-rows-2 gap-4">
                     <div className="col-span-9 grid gap-4 grid-cols-12 row-span-1">
                         <CountrySelect
-                            defaultValue={String(state.inputs?.[`${props.locationKey}Country` as keyof State['inputs']] || '')}
                             state={state}
                             locationKey={props.locationKey}
                             className="w-full col-span-3"/>
                         <Input aria-invalid={!!state.errors?.[postalCodeKey]}
-                               defaultValue={String(state.inputs?.[postalCodeKey as keyof typeof state.inputs] || '')}
+                               value={postalCode}
+                               onChange={handlePostalCodeChange}
                                name={`${props.locationKey}PostalCode`}
                                className="col-span-3"
                                placeholder="Kod pocztowy"
                                aria-describedby={`${props.locationKey}PostalCode`}/>
                         <Input aria-invalid={!!state.errors?.[place]}
-                               defaultValue={String(state.inputs?.[place as keyof typeof state.inputs] || '')}
+                               value={placeValue}
+                               onChange={handlePlaceChange}
                                name={`${props.locationKey}Place`}
                                className="col-span-5"
                                placeholder={title}
                                aria-describedby={`${props.locationKey}Place`}/>
-                      <Search size={24} onClick={() => setOpen(true)}></Search>
+                        <Search size={24} onClick={() => setOpen(true)}></Search>
                     </div>
                     <div className="col-span-9 grid gap-4 grid-cols-12 row-span-1">
                         <DateRangePicker state={state} locationKey={props.locationKey}  className="col-span-6 w-full"/>
@@ -108,6 +143,7 @@ export const LocationCard = ({
                                       state={state}
                                       open={open}
                                       onOpenChange={setOpen}
+                                      onLocationSelect={handleLocationSelect}
                 ></SearchLocationDialog>
                 <div>
                     {errorList.map(({key, id}) => (

@@ -29,7 +29,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     await updateFreightUpdatedAt(freightId);
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      message: "Fracht został zaktualizowany."
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
   }

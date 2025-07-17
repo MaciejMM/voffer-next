@@ -1,20 +1,19 @@
 'use client';
-
-import { useState } from 'react';
+import {useActionState, useState} from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { TruckLoadRadioSelector } from "@/ui/freight/TruckLoadRadioSelector";
 import { Textarea } from "@/components/ui/textarea";
 import { VehicleSelector } from "@/ui/freight/VehicleSelector";
 import { ExchangeSelector } from "@/ui/freight/ExchangeSelector";
-import { EditFreightButton } from "@/ui/freight/EditFreightButton";
 import { Key, LocationCard } from "@/ui/freight/LocationCard";
-import { updateFreight, State } from "@/lib/action";
+import { updateFreightAction, State } from "@/lib/action";
 import { LoadingAttributes } from "@/ui/freight/LoadingAttributes";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Terminal } from "lucide-react";
+import { AlertCircle, Terminal, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useRouter } from 'next/navigation';
+import { PaymentDetails } from "@/ui/freight/PaymentDetails";
+import { Button } from "@/components/ui/button";
 
 export interface Freight {
     id?: string;
@@ -42,6 +41,10 @@ export interface Freight {
     selectedCategories: string[];
     isFullTruck: boolean;
     isPublished: boolean;
+    paymentValue?: string;
+    paymentCurrency?: string;
+    paymentType?: string;
+    paymentDays?: string;
 }
 
 interface FormProps {
@@ -49,8 +52,10 @@ interface FormProps {
 }
 
 export default function Form({ freight }: FormProps) {
-    const router = useRouter();
-    const [state, setState] = useState<State>({
+    const [isPublished, setIsPublished] = useState<boolean>(freight.isPublished);
+    const [paymentCurrency, setPaymentCurrency] = useState<string>(freight.paymentCurrency ?? '');
+    const [paymentType, setPaymentType] = useState<string>(freight.paymentType ?? '');
+    const initialState: State = {
         message: "",
         success: false,
         errors: {},
@@ -60,50 +65,54 @@ export default function Form({ freight }: FormProps) {
             weight: freight.weight || '',
             length: freight.length || '',
             volume: freight.volume || '',
-            description: freight.description,
-            loadingCountry: freight.loadingCountry,
-            loadingPostalCode: freight.loadingPostalCode,
-            loadingPlace: freight.loadingPlace,
-            loadingStartTime: freight.loadingStartTime,
-            loadingEndTime: freight.loadingEndTime,
-            loadingStartDate: freight.loadingStartDate,
-            loadingEndDate: freight.loadingEndDate,
-            unloadingCountry: freight.unloadingCountry,
-            unloadingPostalCode: freight.unloadingPostalCode,
-            unloadingPlace: freight.unloadingPlace,
-            unloadingStartTime: freight.unloadingStartTime!,
-            unloadingEndTime: freight.unloadingEndTime!,
-            unloadingStartDate: freight.unloadingStartDate,
-            unloadingEndDate: freight.unloadingEndDate,
-            selectedCategories: freight.selectedCategories,
-            selectedVehicles: freight.selectedVehicles,
-            isFullTruck: freight.isFullTruck,
-            isPublished: freight.isPublished,
+            description: freight.description || '',
+            loadingCountry: freight.loadingCountry || '',
+            loadingPostalCode: freight.loadingPostalCode || '',
+            loadingPlace: freight.loadingPlace || '',
+            loadingStartTime: freight.loadingStartTime || '',
+            loadingEndTime: freight.loadingEndTime || '',
+            loadingStartDate: freight.loadingStartDate || '',
+            loadingEndDate: freight.loadingEndDate || '',
+            unloadingCountry: freight.unloadingCountry || '',
+            unloadingPostalCode: freight.unloadingPostalCode || '',
+            unloadingPlace: freight.unloadingPlace || '',
+            unloadingStartTime: freight.unloadingStartTime || '',
+            unloadingEndTime: freight.unloadingEndTime || '',
+            unloadingStartDate: freight.unloadingStartDate || '',
+            unloadingEndDate: freight.unloadingEndDate || '',
+            selectedCategories: freight.selectedCategories || [],
+            selectedVehicles: freight.selectedVehicles || [],
+            isFullTruck: freight.isFullTruck || false,
+            isPublished: freight.isPublished || false,
+            paymentValue: freight.paymentValue || '',
+            paymentCurrency: freight.paymentCurrency || '',
+            paymentType: freight.paymentType || '',
+            paymentDays: freight.paymentDays || '',
         }
-    });
-    const [isPending, setIsPending] = useState(false);
+    };
+    const [state, action, isPending] = useActionState(updateFreightAction, initialState);
+
+    const handleCheckedChange = (checked: boolean | "indeterminate") => {
+        setIsPublished(checked === true);
+    };
+
+    const handleCurrencyChange = (value: string) => {
+        setPaymentCurrency(value);
+    };
+
+    const handlePaymentTypeChange = (value: string) => {
+        setPaymentType(value);
+    };
 
     const handleSubmit = async (formData: FormData) => {
-        setIsPending(true);
-        try {
-            const result = await updateFreight(state, formData);
-            setState(result);
-            if (result.success) {
-                router.push('/dashboard/freight');
-            }
-        } catch (error) {
-            setState({
-                ...state,
-                isError: true,
-                message: error instanceof Error ? error.message : 'An unexpected error occurred'
-            });
-        } finally {
-            setIsPending(false);
-        }
+        formData.set('isPublished', isPublished ? 'true' : 'false');
+        formData.set('paymentCurrency', paymentCurrency);
+        formData.set('paymentType', paymentType);
+        return action(formData);
     };
 
     return (
-        <form action={handleSubmit} className="flex flex-col gap-4 w-full">
+        <form action={handleSubmit} className="flex flex-col gap-8">
             <input type="hidden" name="id" value={freight.id || ''} />
             <div className="flex flex-row gap-4">
                 <LocationCard locationKey={Key.Loading} state={state} />
@@ -127,12 +136,20 @@ export default function Form({ freight }: FormProps) {
                             <Checkbox 
                                 id="isPublished" 
                                 name="isPublished" 
-                                defaultChecked={freight.isPublished} 
+                                checked={isPublished}
+                                onCheckedChange={handleCheckedChange}
                             />
                             <Label htmlFor="isPublished">Publish to Trans.EU</Label>
                         </div>
                     </CardContent>
                 </Card>
+                <PaymentDetails
+                    state={state}
+                    paymentCurrency={paymentCurrency}
+                    paymentType={paymentType}
+                    onCurrencyChange={handleCurrencyChange}
+                    onPaymentTypeChange={handlePaymentTypeChange}
+                />
                 {state?.isError ? (
                     <Alert variant="destructive" aria-invalid={true}>
                         <AlertCircle className="h-4 w-4" />
@@ -152,7 +169,18 @@ export default function Form({ freight }: FormProps) {
                     </Alert>
                 ) : null}
             </div>
-            <EditFreightButton isPending={isPending} className="self-start"/>
+            <div className="flex justify-start">
+                <Button type="submit" disabled={isPending}>
+                    {isPending ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Zapisywanie...
+                        </>
+                    ) : (
+                        'Zapisz zmiany'
+                    )}
+                </Button>
+            </div>
         </form>
     );
 }

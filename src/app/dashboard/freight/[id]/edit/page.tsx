@@ -77,6 +77,10 @@ async function EditFreightContent({ id }: { id: string }) {
             selectedVehicles: freightData.rawFormData.selectedVehicles || [],
             isFullTruck: freightData.rawFormData.isFullTruck || false,
             isPublished: freightData.rawFormData.isPublished || false,
+            paymentValue: freightData.rawFormData.paymentValue || '',
+            paymentCurrency: freightData.rawFormData.paymentCurrency || '',
+            paymentType: freightData.rawFormData.paymentType || '',
+            paymentDays: freightData.rawFormData.paymentDays || '',
         };
 
         return <EditFreightForm freight={transformedFreight} />;

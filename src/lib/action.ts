@@ -3,7 +3,7 @@ import {z} from 'zod';
 import { cookies } from 'next/headers';
 import { getAccessToken } from './tokenStore';
 import { mapFreightFormToTransEuRequest } from './mappers/freightMapper';
-import { createFreight, getFreightById } from "@/lib/actions/freight";
+import { createFreight, getFreightById, updateFreight } from "@/lib/actions/freight";
 
 export interface FreightFormData {
     weight: string;
@@ -30,6 +30,10 @@ export interface FreightFormData {
     selectedVehicles: string[];
     isFullTruck: boolean;
     isPublished: boolean;
+    paymentValue?: string;
+    paymentCurrency?: string;
+    paymentType?: string;
+    paymentDays?: string;
 }
 
 const FormSchema = z.object({
@@ -103,6 +107,36 @@ const FormSchema = z.object({
     selectedVehicles: z.array(z.string()).min(1, {message: 'Wybierz minimum jeden typ pojazdu'}).max(5, {message: 'Wybierz maksymalnie 5 typów pojazdów'}),
     isFullTruck: z.boolean(),
     isPublished: z.boolean().default(false),
+    paymentValue: z.string({
+        required_error: 'Wprowadź wartość płatności',
+        invalid_type_error: 'Wprowadź wartość płatności',
+    }).min(1, { message: 'Wprowadź wartość płatności' }),
+    paymentCurrency: z.string({
+        required_error: 'Wybierz walutę',
+        invalid_type_error: 'Wybierz walutę',
+    }).min(1, { message: 'Wybierz walutę' }),
+    paymentType: z.string({
+        required_error: 'Wybierz typ płatności',
+        invalid_type_error: 'Wybierz typ płatności',
+    }).min(1, { message: 'Wybierz typ płatności' }),
+    paymentDays: z.union([
+        z.string().refine((val) => {
+            const num = parseInt(val);
+            return !isNaN(num) && num >= 1 && num <= 60;
+        }, {
+            message: 'Liczba dni musi być między 1 a 60',
+        }),
+        z.null(),
+        z.undefined()
+    ]),
+}).refine((data) => {
+    if (data.paymentType === 'deferred') {
+        return !!data.paymentDays;
+    }
+    return true;
+}, {
+    message: 'Wprowadź liczbę dni płatności',
+    path: ['paymentDays']
 });
 
 const CreateFreight = FormSchema;
@@ -144,6 +178,10 @@ export async function createFreightAction(prevState: State, formData: FormData):
         selectedVehicles: formData.getAll('selectedVehicles') as string[],
         isFullTruck: formData.get('isFullTruck') !== 'false',
         isPublished: formData.get('isPublished') === 'true',
+        paymentValue: formData.get('paymentValue') as string,
+        paymentCurrency: formData.get('paymentCurrency') as string,
+        paymentType: formData.get('paymentType') as string,
+        paymentDays: formData.get('paymentDays') as string,
     };
     console.log(rawFormData);
     // Get new access token
@@ -186,8 +224,7 @@ export async function createFreightAction(prevState: State, formData: FormData):
     }
 
     const transEuRequest = mapFreightFormToTransEuRequest(rawFormData);
-    console.log(transEuRequest.requirements.vehicle_size);
-    console.log(transEuRequest.requirements);
+    console.log(JSON.stringify(transEuRequest));
 
     const transEuResponse = await fetch('https://api.platform.trans.eu/ext/freights-api/v1/freight-exchange', {
         method: 'POST',
@@ -255,13 +292,13 @@ export async function createFreightAction(prevState: State, formData: FormData):
         isError: false,
         isSuccess: true,
         message: 'Oferta została utworzona pomyślnie.',
-        inputs: rawFormData,
+        inputs: process.env.BASE_ENV === 'local' ? rawFormData : {},
         errors: {},
     };
 }
 
 
-export async function updateFreight(prevState: State, formData: FormData): Promise<State> {
+export async function updateFreightAction(prevState: State, formData: FormData): Promise<State> {
     const rawFormData = {
         id: formData.get('id') as string,
         weight: formData.get('weight') as string,
@@ -288,6 +325,10 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
         selectedVehicles: formData.getAll('selectedVehicles') as string[],
         isFullTruck: formData.get('isFullTruck') !== 'false',
         isPublished: formData.get('isPublished') === 'true',
+        paymentValue: formData.get('paymentValue') as string,
+        paymentCurrency: formData.get('paymentCurrency') as string,
+        paymentType: formData.get('paymentType') as string,
+        paymentDays: formData.get('paymentDays') as string,
     };
 
     // Get new access token
@@ -396,6 +437,10 @@ export async function updateFreight(prevState: State, formData: FormData): Promi
             errors: {},
         };
     }
+    const data = await transEuRes.json();
+
+    //update the freight in the database
+    await updateFreight(rawFormData.id, rawFormData, data);    
 
     return {
         success: true,

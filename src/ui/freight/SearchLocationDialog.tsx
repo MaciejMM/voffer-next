@@ -33,6 +33,7 @@ type PostalCodeSearchProps = {
     locationKey: string;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onLocationSelect: (postalCode: string, city: string, countryCode: string) => void;
 }
 
 export type SearchResult = {
@@ -46,9 +47,9 @@ export const SearchLocationDialog = ({
                                          className,
                                          state,
                                          onOpenChange,
+                                         onLocationSelect,
                                          ...props
                                      }: PostalCodeSearchProps) => {
-    const {getAccessTokenRaw} = useKindeClient();
     const [data, setData] = useState<SearchResult[]>([]);
     const [value, setValue] = React.useState("")
     const [isLoading, setIsLoading] = useState(false);
@@ -90,14 +91,19 @@ export const SearchLocationDialog = ({
 
     const selectItem = (item: SearchResult) => {
         if (props.locationKey === "loading") {
-            state.inputs!.loadingPostalCode = item.postalCode;
-            state.inputs!.loadingPlace = item.city;
-            state.inputs!.loadingCountry = item.countryCode.toUpperCase();
+            if (state.inputs) {
+                state.inputs.loadingPostalCode = item.postalCode;
+                state.inputs.loadingPlace = item.city;
+                state.inputs.loadingCountry = item.countryCode.toUpperCase();
+            }
         } else {
-            state.inputs!.unloadingPostalCode = item.postalCode;
-            state.inputs!.unloadingPlace = item.city;
-            state.inputs!.unloadingCountry = item.countryCode.toUpperCase();
+            if (state.inputs) {
+                state.inputs.unloadingPostalCode = item.postalCode;
+                state.inputs.unloadingPlace = item.city;
+                state.inputs.unloadingCountry = item.countryCode.toUpperCase();
+            }
         }
+        onLocationSelect(item.postalCode, item.city, item.countryCode.toUpperCase());
         setData([]);
         setInput("");
         onOpenChange(false);

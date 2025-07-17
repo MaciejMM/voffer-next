@@ -44,6 +44,10 @@ export interface Freight {
         isFullTruck: boolean;
         transEuResponse?: any;
         isPublished: boolean;
+        paymentValue?: string;
+        paymentCurrency?: string;
+        paymentType?: string;
+        paymentDays?: string;
     };
     userId: string;
     isActive: boolean | null;
@@ -88,7 +92,7 @@ const ActionsCell = ({ row }: { row: any }) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Akcje</DropdownMenuLabel>
-                {row.original.transeuId && (
+                {row.original.transeuId && row.original.rawFormData.isPublished && (
                 <DropdownMenuItem
                     onClick={() => handleRefreshFreight(row.original.transeuId!)}
                     disabled={loadingId === row.original.transeuId}
@@ -206,16 +210,19 @@ export const columns: ColumnDef<Freight>[] = [
         },
     },
     {
-        accessorKey: "rawFormData.weight",
-        header: "Waga",
-    },
-    {
-        accessorKey: "rawFormData.length",
-        header: "Długość",
-    },
-    {
-        accessorKey: "rawFormData.volume",
-        header: "Wolumen",
+        accessorKey: "attributes",
+        header: "Atrybuty",
+        cell: ({ row }) => {
+            return (
+                <div className="flex flex-col">
+                <div className="flex flex-col gap-2">
+                    <div className="text-xs flex flex-row justify-between"><span className="w-[100px]">Waga</span><span> {parseFloat(row.original.rawFormData.weight).toFixed(1)}</span></div>
+                    <div className="text-xs flex flex-row justify-between"><span className="w-[100px]">Długość</span><span>{parseFloat(row.original.rawFormData.length).toFixed(1)}</span></div>
+                    <div className="text-xs flex flex-row justify-between"><span className="w-[100px]">Wolumen</span><span>{parseFloat(row.original.rawFormData.volume).toFixed(1)}</span></div>
+                </div>
+            </div>
+            );
+        },
     },
     {
         accessorKey: "rawFormData.isFullTruck",
@@ -231,16 +238,27 @@ export const columns: ColumnDef<Freight>[] = [
         },
     },
     {
+        accessorKey: "rawFormData.isPublished",
+        header: "Publikacja",
+        cell: ({ row }) => {
+            return (
+                <div className="flex flex-col">
+                    <span className="text-sm text-gray-900">{row.original.rawFormData.isPublished ? "Tak" : "Nie"}</span>
+                </div>
+            );
+        },
+    },
+    {
         accessorKey: "transeuId",
-        header: "Trans.eu ID",
+        header: "Trans.eu Status",
         cell: ({ row }) => {
             const transeuId = row.getValue("transeuId") as string | null ?? 'brak ID';
             const status = row.original.transEuStatus as string | null ?? 'brak statusu';
             return (
                 <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                        <span>{transeuId}</span>
-                        <span>{status}</span>
+                    <div className="flex flex-col gap-2">
+                        <div className="text-xs">{transeuId}</div>
+                        <div className="text-xs">{status}</div>
                     </div>
                 </div>
             );

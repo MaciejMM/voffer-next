@@ -5,7 +5,16 @@ interface TransEuFreightRequest {
   external_source?: string;
   capacity: number;
   publish: boolean;
-  payment?: object;
+  payment?: {
+    price: {
+      value: number;
+      currency: string;
+      period: {
+        payment: string;
+        days: number | null;
+      };
+    };
+  };
   requirements: {
     is_ftl: boolean;
     required_truck_bodies: string[];
@@ -144,5 +153,15 @@ export function mapFreightFormToTransEuRequest(formData: FreightFormData): Trans
         ],
       },
     ],
+    payment: {
+      price: {
+        value: Number(formData.paymentValue),
+        currency: formData.paymentCurrency || 'eur',
+        period: {
+          payment: formData.paymentType || 'deferred',
+          days: formData.paymentType === 'deferred' ? Number(formData.paymentDays) : null
+        }
+      }
+    },
   };
 } 
